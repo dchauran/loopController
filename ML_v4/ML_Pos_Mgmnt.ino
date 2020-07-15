@@ -399,7 +399,7 @@ void antenna_select(int32_t frq)
   }
   if (old_ant != ant)
   {
-    #if !DRV8825STEPPER
+    #if !STEPSTICKS
     a4975_PwrOff();                                  // Cut motor current
     #else
     drv8825_PwrOff();
@@ -996,7 +996,11 @@ void rotate_stepper_b(uint8_t microstep_rate, uint8_t backlash_comp)
                                  
   step_size = pow(2,microstep_rate);      // 1 microstep is our smallest unit.
                                           // 8 microsteps is our largest unit
-  angle = controller_settings.backlash_angle * 40; // * 5 * 8 microsteps
+  #if STEPSTICKS == 2
+  angle = controller_settings.backlash_angle * (pow(2,6-microstep_rate)*5);
+  #else
+  angle = controller_settings.backlash_angle * (pow(2,3-microstep_rate)*5);
+  #endif
   
   // Determine direction of travel, depending on whether second stored memory pos is larger or smaller
   // than first pos
@@ -1007,15 +1011,15 @@ void rotate_stepper_b(uint8_t microstep_rate, uint8_t backlash_comp)
   // Position the Stepper according to Frequency
   //
   // Tune Up
-  #if   ENDSTOP_OPT == 1                  // Vacuum Cap, No End stop sensors implemented
+  #if   ENDSTOP_OPT == 1                      // Vacuum Cap, No End stop sensors implemented
   if (!backlash && ((stepper_track[ant] + (step_size-1)) < (running[ant].Pos + delta_Pos[ant])))
-  #elif ENDSTOP_OPT == 2                  // End stop sensors implemented
+  #elif ENDSTOP_OPT == 2 || ENDSTOP_OPT == 4  // End stop sensors implemented
   if (!backlash && !flag.endstop_upper && ((stepper_track[ant] + (step_size-1)) < (running[ant].Pos + delta_Pos[ant])))
-  #elif ENDSTOP_OPT == 3                  // No End stop sensors implemented
+  #elif ENDSTOP_OPT == 3                      // No End stop sensors implemented
   if (!backlash && ((stepper_track[ant] + (step_size-1)) < (running[ant].Pos + delta_Pos[ant])))
   #endif
   {
-    #if DRV8825STEPPER  // ML.h selection: A Pololu (TI) DRV8825 or (Allegro) A4988 Stepper motor controller carrier board
+    #if STEPSTICKS  // ML.h selection: A Pololu (TI) DRV8825 or (Allegro) A4988 Stepper motor controller carrier board
     drv8825_Incr(microstep_rate);
     #else               // ML.h selection: A pair of A4975 Stepper Controllers
     a4975_Incr(microstep_rate);	
@@ -1035,16 +1039,16 @@ void rotate_stepper_b(uint8_t microstep_rate, uint8_t backlash_comp)
       backlash = true;                      // We need to tune town, set Backlash flag
     }
     // Tune Down, overshooting by STEPPER_BACKLASH
-    #if   ENDSTOP_OPT == 1                // Vacuum Cap, No End stop sensors implemented
+    #if   ENDSTOP_OPT == 1                      // Vacuum Cap, No End stop sensors implemented
     if (backlash && (stepper_track[ant] > (running[ant].Pos + delta_Pos[ant] - angle))
        && ((dir_of_travel*stepper_track[ant]) > (dir_of_travel*min_preset[ant].Pos)))  
-    #elif ENDSTOP_OPT == 2                // End stop sensors implemented  
+    #elif ENDSTOP_OPT == 2 || ENDSTOP_OPT == 4  // End stop sensors implemented  
     if (backlash && !flag.endstop_lower && (stepper_track[ant] > (running[ant].Pos + delta_Pos[ant] - angle)))  
-    #elif ENDSTOP_OPT == 3                // No End stop sensors implemented
+    #elif ENDSTOP_OPT == 3                      // No End stop sensors implemented
     if (backlash && (stepper_track[ant] > (running[ant].Pos + delta_Pos[ant] - angle)))  
     #endif
     {
-      #if DRV8825STEPPER  // ML.h selection: A Pololu (TI) DRV8825 or (Allegro) A4988 Stepper motor controller carrier board
+      #if STEPSTICKS  // ML.h selection: A Pololu (TI) DRV8825 or (Allegro) A4988 Stepper motor controller carrier board
       drv8825_Decr(microstep_rate);
       #else               // ML.h selection: A pair of A4975 Stepper Controllers
       a4975_Decr(microstep_rate);	
@@ -1060,15 +1064,15 @@ void rotate_stepper_b(uint8_t microstep_rate, uint8_t backlash_comp)
   else
   {
     // Tune Down
-    #if   ENDSTOP_OPT == 1                // Vacuum Cap, No End stop sensors implemented
+    #if   ENDSTOP_OPT == 1                      // Vacuum Cap, No End stop sensors implemented
     if (stepper_track[ant] > (running[ant].Pos + delta_Pos[ant]))  
-    #elif ENDSTOP_OPT == 2                // End stop sensors implemented  
+    #elif ENDSTOP_OPT == 2 || ENDSTOP_OPT == 4  // End stop sensors implemented  
     if (!flag.endstop_lower && (stepper_track[ant] > (running[ant].Pos + delta_Pos[ant])))  
-    #elif ENDSTOP_OPT == 3                // No End stop sensors implemented
+    #elif ENDSTOP_OPT == 3                      // No End stop sensors implemented
     if (stepper_track[ant] > (running[ant].Pos + delta_Pos[ant]))  
     #endif
     {
-      #if DRV8825STEPPER  // ML.h selection: A Pololu (TI) DRV8825 or (Allegro) A4988 Stepper motor controller carrier board
+      #if STEPSTICKS  // ML.h selection: A Pololu (TI) DRV8825 or (Allegro) A4988 Stepper motor controller carrier board
       drv8825_Decr(microstep_rate);
       #else               // ML.h selection: A pair of A4975 Stepper Controllers
       a4975_Decr(microstep_rate);  

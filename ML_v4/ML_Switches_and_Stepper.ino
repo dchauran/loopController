@@ -236,7 +236,7 @@ int8_t dn_button_toggle(void)
   return toggle_status;
 }
 
-#if !DRV8825STEPPER    // ML.h selection: A pair of A4975 Stepper Controllers
+#if !STEPSTICKS    // ML.h selection: A pair of A4975 Stepper Controllers
 //
 //---------------------------------------------------------------------------------
 // Bipolar Stepper Motor Control Routine,
@@ -335,15 +335,25 @@ void a4975_Init(void)
 //
 void drv8825_Incr(uint8_t res)
 {
+  #if STEPSTICKS == 2
+  res = 6 - res;                       // TMC 2209 has different microstepping
+  #else
   res = 3 - res;                       // Reversed: 0 for no microsteps
                                        // 1 for half step (2 microsteps)
                                        // 2 for quarter step (4 microsteps)
                                        // 3 for eighth step (8 microsteps)
-
+  #endif
   drv8825_PwrOn();                     // Ensure Power On state
   digitalWrite(drv8825_dir, LOW);      // Clockwise
+  #if !TMCUART
+  #if STEPSTICKS == 2
+  digitalWrite(drv8825_ms1, (res&0x01)?LOW:HIGH);  // ... Microstep resolution is inverted for TMC2209
+  digitalWrite(drv8825_ms2, (res&0x02)?LOW:HIGH);
+  #else
   digitalWrite(drv8825_ms1, (res&0x01)?HIGH:LOW);  // ... Microstep resolution
   digitalWrite(drv8825_ms2, (res&0x02)?HIGH:LOW);
+  #endif
+  #endif
   digitalWrite(drv8825_step, HIGH);    // Prime for Movement, turn Step pulse on
 }
 //
@@ -351,15 +361,25 @@ void drv8825_Incr(uint8_t res)
 //
 void drv8825_Decr(uint8_t res)
 {
+  #if STEPSTICKS == 2
+  res = 6 - res;                       // TMC 2209 has different microstepping
+  #else
   res = 3 - res;                       // Reversed: 0 for no microsteps
                                        // 1 for half step (2 microsteps)
                                        // 2 for quarter step (4 microsteps)
                                        // 3 for eighth step (8 microsteps)
-
+  #endif
   drv8825_PwrOn();                     // Ensure Power On state
   digitalWrite(drv8825_dir, HIGH);     // Counterclockwise
+  #if !TMCUART
+  #if STEPSTICKS == 2
+  digitalWrite(drv8825_ms1, (res&0x01)?LOW:HIGH);  // ... Microstep resolution is inverted for TMC2209
+  digitalWrite(drv8825_ms2, (res&0x02)?LOW:HIGH);
+  #else
   digitalWrite(drv8825_ms1, (res&0x01)?HIGH:LOW);  // ... Microstep resolution
   digitalWrite(drv8825_ms2, (res&0x02)?HIGH:LOW);
+  #endif
+  #endif
   digitalWrite(drv8825_step, HIGH);    // Prime for Movement, turn Step pulse on
 }
 
@@ -396,8 +416,10 @@ void drv8825_Init(void)
 {
   pinMode(drv8825_dir, OUTPUT);        // Direction Pin    
   pinMode(drv8825_step, OUTPUT);       // Step Pin
+  #if !TMCUART
   pinMode(drv8825_ms2, OUTPUT);        // MS2 pin
   pinMode(drv8825_ms1, OUTPUT);        // MS1 pin
+  #endif
   pinMode(drv8825_enable, OUTPUT);     // Enable Pin    
   drv8825_PwrOff();                    // Ensure Power Off state
 }

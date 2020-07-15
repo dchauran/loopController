@@ -33,7 +33,7 @@
 #include <Arduino.h>
 
 #define  VERSION "4.10"
-#define  DATE    "2020-06-21"
+#define  DATE    "2020-07-14"
 
 //
 //-----------------------------------------------------------------------------
@@ -45,9 +45,23 @@
 // Definitions for Hardware implementation
 //
 //-----------------------------------------------------------------------------
-#define DRV8825STEPPER     1    // Set as 0 if 2x Allegro A4975 stepper drivers
+#define STEPSTICKS         2    // Set as 0 if 2x Allegro A4975 stepper drivers
                                 // Set as 1 if Pololu or StepStick (TI)n DRV8825
                                 // or (Allegro) A4988 stepper controller
+                                // Set as 2 if TMC 2209 (either UART or legacy)
+                                // Also works with TMC2209 stepper drivers, and
+                                // must be set to 1 if TMCUART is used.
+//-----------------------------------------------------------------------------
+#define TMCUART            1    // Set as 0 unless using a TMC2209 stepstick,
+                                // and pins 26 & 31 have been jumpered to the
+                                // PDN_UART pin (pin 5) on the TMC board.
+                                // Re-maps 1 pin for antenna selection, and 1
+                                // pin for radion selection to unused pins.
+//-----------------------------------------------------------------------------
+#define HOLDSTEPPERS       0    // Set to 1 to keep steppers powered when not
+                                // tuning. This allows holding the position at
+                                // a microstep instead of a full step, but may
+                                // cause RF noise.
 //-----------------------------------------------------------------------------
 // Enable AD8307 option for Power/SWR meter if using 2x AD8307 log amp detector
 #define AD8307_INSTALLED   0    // 0 or 1
@@ -70,7 +84,9 @@
 //    inhibit use of Up/Down buttons.  Can be used in "smart" mode with frequency
 //    input from radio, or "dumb" mode with no frequency input.
 // 3: Butterfly capacitor, no end-stops.  Otherwise same as 2).
-#define ENDSTOP_OPT        1    // 1, 2 or 3
+// 4: TMC2209 stall detection. Requires TMC UART, and connection of the PDN_UART
+//    pin to pins 26/31 of the teensy.
+#define ENDSTOP_OPT        4    // 1, 2 or 3
 
 //-----------------------------------------------------------------------------
 // Enable Power/SWR meter and SWR-Autotune
@@ -78,7 +94,7 @@
 //  to enable additional pushbuttons 4, 5 and 6.  It will also enable the
 //  Power and SWR meter code, including AD-read of Forward and Reverse voltage
 //  inputs.  It also enables the SWR Tune and SWR-Autotune functions)
-#define PSWR_AUTOTUNE      0    // 0 or 1
+#define PSWR_AUTOTUNE      1    // 0 or 1
 
 //-----------------------------------------------------------------------------
 // Stepper Motor Recalibrate
@@ -169,13 +185,13 @@
 
 //-----------------------------------------------------------------------------
 // Definitions for Screen Saver
-#define SCREENSAVE_ACTIVATE   300    // 30 seconds for going into screensaver mode
+#define SCREENSAVE_ACTIVATE   3000   // x100 ms for going into screensaver mode
                                      // Set as 0 to deactivate screensaver
 #define SCREENSAVE_UPDATE      50    // Update screensaver once every 5 seconds
-//
+
 #define SCREENSAVE_CUST         0    // Normally 0 for disabled, 1 to enable.
                                      // Disabled for the last tuned frequency to be shown
-#define SCREENSAVE_CUST_TEXT "TF3LJ/VE2AO"  // Custom Screensaver msg, max 20 char
+#define SCREENSAVE_CUST_TEXT "FeElInG kInDa lOoPy!"  // Custom Screensaver msg, max 20 char
 
 //-----------------------------------------------------------------------------
 // Intro Message string to print to the first 2 lines of the LCD at startup
@@ -186,7 +202,7 @@
 //-----------------------------------------------------------------------------
 // Change the below to display your own callsign on the LCD during startup
 // (line 3).  Make sure there are 20 characters in total, including spaces.
-#define DISP_CALLSIGN      "TF3LJ / VE2AO       "
+#define DISP_CALLSIGN      "        AF7UX       "
 
 //-----------------------------------------------------------------------------
 // The appropriate LCD indications below are automatically selected, based on
@@ -198,6 +214,8 @@
 #define STARTUPDISPLAY4    "End Stop Switches"
 #elif ENDSTOP_OPT == 3
 #define STARTUPDISPLAY4    "No End Stop Switches"
+#elif ENDSTOP_OPT == 4
+#define STARTUPDISPLAY4    "TMC UART End Stop"
 #endif
 
 //-----------------------------------------------------------------------------
@@ -218,7 +236,7 @@
                                     // in units of 100ms
 #define SWR_HUNT_RANGE         200  // Hunt range, each way around a midpoint - 
                                     // is in units of full steps
-#define ACCEPTABLE_SWR         2.5  // Typically 2.0 - 2.5 : 1 - can be set/changed in Menu
+#define ACCEPTABLE_SWR         1.5  // Typically 2.0 - 2.5 : 1 - can be set/changed in Menu
 #define SWR_SAMPLEBUF           32  // SWR is averaged over this many steps
                                     // for finding best dip in a middle pos
 #define BUTTERFLY_MAX_TRAVEL 40000  // Max travel while SWR tune in Up/Down direction
@@ -248,7 +266,7 @@
 // If Tandem Match, then:
 // BRIDGE_COUPLING = N_transformer
 // (if Bruene bridge, then comment the below with a "//" in front of each line.)
-#define BRIDGE_COUPLING       20.0  // Tandem Match, 20 turns
+#define BRIDGE_COUPLING       10.0  // Tandem Match, 20 turns
 #define METER_CAL             1.08  // Calibration fudge factor, Tandem Match
 #define VALUE_R15            18000  // Resistor values of R15 & R16 in voltage divider
 #define VALUE_R17            22000  // Resistor values of R17 & R18 in voltage divider
@@ -351,11 +369,11 @@
 
 // Default Serial Port Rates
 // (valid rates are 0=1200, 1=2400, 2=4800, 3=9600, 4=19200, 5=38400, 6=57600 and 7=115200)
-#define DEFAULT_ICOM_BAUD         3  // Default for ICOM is 9600 b/s
+#define DEFAULT_ICOM_BAUD         4  // Default for ICOM is 9600 b/s
 #define DEFAULT_KENWOOD_BAUD      3  // Default for Kenwood is 9600 b/s
 #define DEFAULT_FT100_BAUD        2  // Default for Yaesu FT-100 is 4800 b/s
 #define DEFAULT_FT7X7_BAUD        2  // Default for Yaesu FT-7x7 is 4800 b/s
-#define DEFAULT_FT8X7_BAUD        2  // Default for Yaesu FT-8x7 is 4800 b/s
+#define DEFAULT_FT8X7_BAUD        5  // Default for Yaesu FT-8x7 is 4800 b/s
 #define DEFAULT_FT920_BAUD        2  // Default for Yaesu FT-920 is 4800 b/s
 #define DEFAULT_FT990_BAUD        2  // Default for Yaesu FT-990 is 4800 b/s
 #define DEFAULT_FT1000MP_BAUD     2  // Default for Yaesu FT-1000MP      is 4800 b/s
@@ -477,8 +495,8 @@ const char *radiotext[] = { "ICOM generic CI-V",
 
 //-----------------------------------------------------------------------------
 // Definitions for Rotary Encoder and Pushbuttons
-#define  ENC_MENURESDIVIDE  16    // Encoder resolution reduction when in Menu
-#define  ENC_TUNERESDIVIDE   2    // Encoder resolution reduction when turning
+#define  ENC_MENURESDIVIDE   8    // Encoder resolution reduction when in Menu
+#define  ENC_TUNERESDIVIDE   1    // Encoder resolution reduction when turning
                                   // stepper motor, 1 = no reduction.
 
 #define  UP_DOWN_RATE       20    // Stepper rate reducer when using Up/Down switches
@@ -507,7 +525,7 @@ const char *radiotext[] = { "ICOM generic CI-V",
 // EEPROM settings Serial Number. Increment this number when firmware mods necessitate
 // the clearing of all Frequency/Position memories stored in EEPROM at first boot after
 // an upgrade
-#define COLDSTART_REF      0x12   // When started, the firmware examines this "Serial Number
+#define COLDSTART_REF      0x13   // When started, the firmware examines this "Serial Number
                                   // and enforces factory reset to clear all Controller
                                   // settings, as well as frequency and position memories.
                                   // To roll this value is useful if there is chance of a
@@ -602,6 +620,9 @@ const int DnSW             = 12;
 #if ENDSTOP_OPT == 2
 const int EndStopLower     = 21;
 const int EndStopUpper     = 22;
+#elif ENDSTOP_OPT == 4
+const int EndStopLower     = 21; // Only 1 endstop pin is required, we know which way we were moving
+const int EndStopUpper     = 21; // The TMC driver sends a high pulse to this pin.
 #endif
 // Rotary Encoder pins
 const int EncI             =  9;
@@ -620,8 +641,8 @@ const int Pref             = A11;
 
 
 // Two alternate Stepper Motor configurations
-// A pair of Allegro A4975, or a Pololu (Texas Instruments) DRV8825 or (Allegro) A4988 
-#if !DRV8825STEPPER
+// A pair of Allegro A4975, or a Pololu (Texas Instruments) DRV8825, (Allegro) A4988, or TMC2209
+#if !STEPSTICKS
 // Assign Output Pins to a pair of A4975 Steppers
 const int PhA           = 20;
 const int D2A           = 19;
@@ -632,15 +653,24 @@ const int D2B           = 15;
 const int D1B           = 14;
 const int D0B           = 13;     // Pin 13 is the ledPin
 #else
-// Assign Output Pins to DRV8825, also applies for the A4988 Stepper
+// Assign Output Pins to DRV8825, also applies for the A4988 & TMC2209 Steppers
 const int drv8825_dir   = 14;     // Direction pin
 const int drv8825_step  = 15;     // Step pin (positive pulse of +1us for each step)
+#if !TMCUART
 const int drv8825_ms2   = 16;     // Microstepping pin MS2
 const int drv8825_ms1   = 17;     // Microstepping pin MS1
+#endif
 const int drv8825_enable= 18;     // Enable pin
 // Note that if using DRV8825 or A4988 Stepper driver, then the 
 // following additional pins are available for other use:
 // 13, 19, 20
+// If using the TMC2209 stepper driver in UART mode, pins 19 and 20 are reassigned to
+// radio and antenna selection functions.
+#endif
+
+#if TMCUART
+const int8_t Uart2_RXD      = 26;
+const int8_t Uart2_TXD      = 31;
 #endif
 
 //-----------------------------------------------------------------------------
@@ -659,14 +689,22 @@ const int ant1_select =  A14; // Analog output pin used as a digital ouput pin
 #else                         // Alternate configuration:
 const int ant1_select =  27;  // Pad underneath the Teensy 3.1/3.2
 #endif
+#if TMCUART
+const int ant2_select =  20;  // TMCUART requires pins 26 & 31, so we move this to one of the "expansion" pins on the PCB.
+#else
 const int ant2_select =  26;  // Pad underneath the Teensy 3.1/3.2
+#endif
 
 #if ANT_CHG_2BANKS && !ANT1_CHANGEOVER && ANALOGOUTPIN // 2 Memory banks, Manual Mode
 const int ChgOvSW     =  27;  // Antenna Changeover, pad underneath the Teensy 3.1/3.2
 #endif
 const int bnd_bit1    =  24;  // Band switching signals, pads underneath the Teensy 3.1/3.2,
 const int bnd_bit2    =  25;  // two binary signal pins for four bands.
+#if TMCUART
+const int profile_bit1=  19;  // TMCUART requires pins 26 & 31, so we move this to one of the "expansion" pins on the PCB.
+#else
 const int profile_bit1=  31;  // Radio Profile switching  signals, pads underneath the Teensy 3.1/3.2,
+#endif
 const int profile_bit2=  32;  // two binary signal pins for four profiles.
 const int swralarm_bit=  33;  // SWR alarm output whenever SWR is higher than Menu Preset
 
@@ -784,6 +822,7 @@ typedef struct  {
           unsigned step_rate   : 4;      // four bits for Stepper rate (100 x step_rate per second)
           unsigned step_speedup: 2;      // two bits for Stepper variable rate speedup
           unsigned microsteps  : 2;      // two bits contain Stepper Motor microstep resolution
+          unsigned holdsteppers: 1;      // hold stepper posision (do not power off) when idle.
           unsigned NotInUse    : 1;      // Not Used
           unsigned swr_ok      : 5;      // Acceptable SWR level, 0 = 1.0, 31 = 4.1
           unsigned swrautotune : 1;      // On/Off, Automatically initiates a Hunt Tune if high SWR

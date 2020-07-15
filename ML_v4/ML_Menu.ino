@@ -96,8 +96,9 @@ const char *clear_memories_menu_items[] =
 #define STEPPER_RATE_SUBMENU       21
 #define STEPPER_SPEEDUP_SUBMENU    22
 #define STEPPER_MICROSTEPS_SUBMENU 23
+#define STEPPER_HOLD_SUBMENU       241
 // Stepper Settings Menu
-const uint8_t stepper_settings_menu_size = 4;
+const uint8_t stepper_settings_menu_size = 5;
 //
 // Nothing here for stepper_rate_submenu()
 //
@@ -110,11 +111,24 @@ const char *stepper_speedup_submenu_items[] =
                            "Eight Times Speed" };
 // Microstep Resolution submenu Items
 const uint8_t stepper_microsteps_submenu_size = 4;
+#if STEPSTICKS == 2
+const char *stepper_microsteps_submenu_items[] =
+                        {  "64 Microsteps",
+                           "32 Microsteps",
+                           "16 Microsteps",
+                           "8 Microsteps" };
+#else
 const char *stepper_microsteps_submenu_items[] =
                         {  "8 Microsteps",
                            "4 Microsteps",
                            "2 Microsteps",
                            "0 Microsteps" };
+#endif
+// Stepper hold submenu Items
+const uint8_t stepper_hold_submenu_size = 2;
+const char *stepper_hold_submenu_items[] =
+                        {  "Power off when idle",
+                           "Hold when idle" };
 
 // Stepper Backlash Select Flag
 #define BACKLASH_SELECT_MENU   25
@@ -749,7 +763,11 @@ void stepper_rate_submenu(void)
     // Normally the Stepper Rate is displayed in Steps per Second.
     // Alternately it can be shown in RPM - #define in ML.h
     // Start by calculating max rate as a function of speed_up and microsteps
+    #if STEPSTICKS == 2
+    int8_t rate_div = (6-microstep_resolution) - step_speedup;
+    #else
     int8_t rate_div = (3-microstep_resolution) - step_speedup;
+    #endif
     if (rate_div > 0) rate_div = pow(2,rate_div);
     else rate_div = 1;
     #if STEPPER_SPEED_IN_RPM            // Display Stepper Rate in RPM
@@ -937,6 +955,83 @@ void stepper_microsteps_submenu(void)
 }
 
 //--------------------------------------------------------------------
+// Stepper Microstep hold selection Submenu
+//--------------------------------------------------------------------
+//void microstep_res_menu(void)
+void stepper_hold_submenu(void)
+{
+  int8_t        current_selection; // Keep track of current menu selection
+  
+  current_selection = holdsteppers;
+  
+  if (Enc.read()/ENC_MENURESDIVIDE != 0)
+  {
+    if (Enc.read()/ENC_MENURESDIVIDE > 0)
+    {
+      current_selection++;
+    }
+    else if (Enc.read()/ENC_MENURESDIVIDE < 0)
+    {
+      current_selection--;
+    }
+    // Reset data from Encoder
+    Enc.write(0);
+
+    // Indicate that an LCD update is needed
+    flag.menu_lcd_upd = false;
+  }
+
+  if (!flag.menu_lcd_upd)               // Need to update LCD
+  {
+    flag.menu_lcd_upd = true;           // We have serviced LCD
+
+    // Keep Encoder Selection Within Bounds of the Menu Size
+    uint8_t menu_size = stepper_hold_submenu_size;
+    while(current_selection >= menu_size)
+      current_selection -= menu_size;
+    while(current_selection < 0)
+      current_selection += menu_size;
+
+    // Update with currently selected value
+    holdsteppers = current_selection;
+    
+    virt_lcd_clear();
+    virt_lcd_print("Hold Steppers");
+    virt_lcd_setCursor(0,1); 
+    virt_lcd_print("When Idle:");
+    
+    // Print the Rotary Encoder scroll Menu
+    lcd_scroll_Menu((char**)stepper_microsteps_submenu_items, menu_size, current_selection, 2, 0,1);
+  }
+
+  // Enact selection
+  if (flag.short_push)
+  {
+    virt_lcd_clear();
+    virt_lcd_setCursor(0,1); 
+
+    flag.short_push = false;            // Clear pushbutton status
+
+    // Check if selected threshold is not same as previous Microstep resolution, as stored in the
+    // controller_settings. 0 for full resolution of 8 microsteps,
+    // 1 for 4 microsteps, 2 for 2 microsteps or 3 for no microsteps
+    if (controller_settings.holdsteppers != current_selection)// New Value
+    {
+      virt_lcd_print("Value Stored");
+      controller_settings.holdsteppers = current_selection;
+      EEPROM_writeAnything(1,controller_settings);
+    }
+    else virt_lcd_print("Nothing Changed");
+
+    Menu_exit_timer = 20;               // Show on LCD for 2 seconds
+    menu_level = 0;                     // We're done with this menu level
+    //flag.config_menu = false;         // We're done
+    flag.config_menu = true;            // Go back to Config Menu
+    flag.menu_lcd_upd = false;          // Make ready for next time
+  }
+}
+
+//--------------------------------------------------------------------
 // Stepper Settings Menu
 //--------------------------------------------------------------------
 void stepper_settings_menu(void)
@@ -975,19 +1070,29 @@ void stepper_settings_menu(void)
     virt_lcd_print("Stepper Settings");
     if (current_selection == 0)
     {
-      virt_lcd_setCursor(0,1); virt_lcd_print("->"); 
-      virt_lcd_setCursor(0,2); virt_lcd_print("  "); 
+      virt_lcd_setCursor(0,1); virt_lcd_print("->");
+      virt_lcd_setCursor(0,2); virt_lcd_print("  ");
       virt_lcd_setCursor(0,3); virt_lcd_print("  ");
+      virt_lcd_setCursor(0,2); virt_lcd_print("  ");
     }
     else if (current_selection == 1)
     {
-      virt_lcd_setCursor(0,1); virt_lcd_print("  "); 
-      virt_lcd_setCursor(0,2); virt_lcd_print("->"); 
+      virt_lcd_setCursor(0,1); virt_lcd_print("  ");
+      virt_lcd_setCursor(0,2); virt_lcd_print("->");
       virt_lcd_setCursor(0,3); virt_lcd_print("  ");
+      virt_lcd_setCursor(0,2); virt_lcd_print("  ");
     }
     else if (current_selection == 2)
     {
-      virt_lcd_setCursor(0,1); virt_lcd_print("  "); 
+      virt_lcd_setCursor(0,1); virt_lcd_print("  ");
+      virt_lcd_setCursor(0,2); virt_lcd_print("  ");
+      virt_lcd_setCursor(0,3); virt_lcd_print("->");
+      virt_lcd_setCursor(0,2); virt_lcd_print("  ");
+    }
+    else if (current_selection == 3)
+    {
+      virt_lcd_setCursor(0,1); virt_lcd_print("  ");
+      virt_lcd_setCursor(0,2); virt_lcd_print("  ");
       virt_lcd_setCursor(0,2); virt_lcd_print("  "); 
       virt_lcd_setCursor(0,3); virt_lcd_print("->");
     }
@@ -996,7 +1101,11 @@ void stepper_settings_menu(void)
       virt_lcd_setCursor(2,1);
       // Normally the Stepper Rate is displayed in Steps per Second.
       // Alternately it can be shown in RPM - #define in ML.h
+      #if STEPSTICKS == 2
+      int8_t rate_div = (6-microstep_resolution) - step_speedup;
+      #else
       int8_t rate_div = (3-microstep_resolution) - step_speedup;
+      #endif
       if (rate_div > 0) rate_div = pow(2,rate_div);
       else rate_div = 1;
       #if STEPPER_SPEED_IN_RPM            // Display Stepper Rate in RPM
@@ -1011,7 +1120,11 @@ void stepper_settings_menu(void)
       sprintf(print_buf,"VariableRate: %ux", tmp_step_speedup); 
       virt_lcd_print(print_buf);
       virt_lcd_setCursor(2,3);
+      #if STEPSTICKS == 2
+      uint8_t tmp_microsteps =  64/pow(2,microstep_resolution);
+      #else
       uint8_t tmp_microsteps =  8/pow(2,microstep_resolution);
+      #endif
       if (tmp_microsteps == 1) tmp_microsteps = 0;
       sprintf(print_buf,"Microsteps  : %u",tmp_microsteps); 
       virt_lcd_print(print_buf);
@@ -1044,6 +1157,10 @@ void stepper_settings_menu(void)
 
       case 2:
         menu_level = STEPPER_MICROSTEPS_SUBMENU;
+        break;
+
+      case 3:
+        menu_level = STEPPER_HOLD_SUBMENU;
         break;
 
       default:

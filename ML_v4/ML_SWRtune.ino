@@ -175,7 +175,7 @@ int8_t SWR_Hunt(void)
     tune.Progress = FAIL;
   }
   else
-  #elif ENDSTOP_OPT == 2
+  #elif ENDSTOP_OPT == 2 || ENDSTOP_OPT == 4
   // If at lower endstop, then modify the delta_Pos until resolved
   if (flag.endstop_lower)
   {
@@ -254,7 +254,7 @@ int8_t SWR_TuneUp(void)
   #if ENDSTOP_OPT == 1
   // If at upper endstop, then we have reached the end of the line without resoution
   if (flag.cap_upper_pos || (abs(stepper_track[ant] - max_preset[ant].Pos) < step_size))
-  #elif ENDSTOP_OPT == 2
+  #elif ENDSTOP_OPT == 2 || ENDSTOP_OPT == 4
   // If at upper endstop, then we have reached the end of the line without resoution
   if (flag.endstop_upper)
   #elif ENDSTOP_OPT == 3
@@ -324,7 +324,7 @@ int8_t SWR_TuneDown(void)
   #if ENDSTOP_OPT == 1
   // If at lower endstop, then we have reached the end of the line without resoution
   if (flag.cap_lower_pos || (abs(stepper_track[ant] - min_preset[ant].Pos) < step_size))
-  #elif ENDSTOP_OPT == 2
+  #elif ENDSTOP_OPT == 2 || ENDSTOP_OPT == 4
   // If at lower endstop, then we have reached the end of the line without resoution
   if (flag.endstop_lower)
   #elif ENDSTOP_OPT == 3

@@ -20,7 +20,7 @@
 //**
 //** Platform........: Teensy 3.1 & 3.2 (http://www.pjrc.com)
 //**                   (It may be possible to adapt this code to other
-//**                    Arduino compatible platforms, however this will 
+//**                    contollers, however this would very likely
 //**                    require extensive rewriting of some portions of
 //**                    the code)
 //**
@@ -33,7 +33,7 @@
 //------------------------------------------------------------------------
 // For selection of features such as:
 //   (to name a few...)
-// - Stepper Motor Controller: 2x A4975 or alternately a DRV8825 or A4988
+// - Stepper Motor Controller: 2x A4975, DRV8825/A4988, or TMC2209
 // - Endstop sensor functionality;
 // - Power and SWR meter sensitivity and behaviour;
 // - SWR assisted auto-tune; 
@@ -65,6 +65,10 @@
 #include <ADC.h>                     // Syncrhonous read of the two builtin ADC
 #include "_EEPROMAnything.h"
 #include "ML.h"
+
+#if TMCUART
+#include <TMCStepper.h>
+#endif
 
 #if WIRE_ENABLED
 #include <i2c_t3.h>
@@ -112,10 +116,13 @@ int8_t    step_rate;                 // Stepper rate, 1 - 15. Actual rate is 100
 int8_t    step_speedup;              // Stepper Motor variable rate speedup, 0 - 3, equals a speedup of
                                      // 1, 2, 4 or 8 ( pow(2, step_speedup) )
 int8_t    microstep_resolution;      // Stepper Motor microstep resolution, 0 - 3, where:
-                                     //        0 for full resolution of 8 microsteps
-                                     //        1 for 4 microsteps (position tracking increases in quadruple steps)
-                                     //        2 for 2 microsteps  (position tracking increases in double steps)
-                                     //        or 3 for no microsteps (position tracking increases 8x per step)
+                                     //        0 for full resolution of 8 microsteps (64 in TMC2209)
+                                     //        1 for 4 microsteps (32 in TMC2209)
+                                     //        2 for 2 microsteps  (16 in TMC2209)
+                                     //        or 3 for no microsteps (8 in TMC2209)
+                                     // Position tracking increases per step, except when full steps
+                                     // are used, in which case it increases by 8.
+int8_t    holdsteppers;              // Keep the steppers powered when idle (defaults to 0 - steppers disabled when idle)
 int16_t   radio_selection;           // Radio selection, where:
                                      //        0 = ICOM CI-V Auto
                                      //        1 = ICOM CI-V Poll
@@ -490,6 +497,17 @@ void loop()
     #endif
 
     //-------------------------------------------------------------------
+    #if ENDSTOP_OPT == 4                   // TMC Diag pin pulse
+    // Check End Stop Sensors   
+    if (digitalRead(EndStopUpper) == HIGH)
+      flag.endstop_upper = true;           // Set Flag indicating Upper Endstop limit
+    else flag.endstop_upper = false;       // Clear Flag indicating Upper Endstop limit
+    if (digitalRead(EndStopLower) == HIGH)
+      flag.endstop_lower = true;           // Set Flag indicating Lower Endstop limit
+    else flag.endstop_lower = false;       // Clear Flag indicating Lower Endstop limit
+    #endif
+
+    //-------------------------------------------------------------------
     // Derive the Active Stepper Settings - used for instance to determine
     // variable rate based on distance of movement.
     //Returned value contains two variables, microstep_skip in the lower 4 bits
@@ -511,29 +529,29 @@ void loop()
       if (!flag.config_menu
          && ((controller_settings.trx[controller_settings.radioprofile].radio != MAX_RADIO)
          || !controller_settings.pseudo_vfo))
-      {						
+      {            
         //-------------------------------------------------------------------
         // Manually Move Stepper back and forth using Encoder
         // This mode has no restrictions of movement when configured for 
         // END_STOP options 1 and 3
-        //						
+        //            
         encOutput = Enc.read();
-        #if ENDSTOP_OPT == 2                 // End stop sensors implemented
+        #if ENDSTOP_OPT == 2 || ENDSTOP_OPT == 4  // End stop sensors implemented
         if (!flag.endstop_upper && (encOutput/ENC_TUNERESDIVIDE > 0))
         #else
         if (encOutput/ENC_TUNERESDIVIDE > 0)
         #endif
-        {						
+        {           
           delta_Pos[ant]++;                  // Update position
           Enc.write(encOutput - ENC_TUNERESDIVIDE);
           flag.manual_move = true;           // Disable backlash when using Encoder
         }
-        #if ENDSTOP_OPT == 2                 // End stop sensors implemented
+        #if ENDSTOP_OPT == 2 || ENDSTOP_OPT == 4  // End stop sensors implemented
         else if (!flag.endstop_lower && (encOutput/ENC_TUNERESDIVIDE < 0))
         #else
         else if (encOutput/ENC_TUNERESDIVIDE < 0)
         #endif
-        {	
+        { 
           delta_Pos[ant]--;                  // Update position
           Enc.write(encOutput + ENC_TUNERESDIVIDE);
           flag.manual_move = true;           // Disable backlash when using encoder
@@ -558,7 +576,7 @@ void loop()
           if (up_button_push() && 
               ((dir_of_travel*stepper_track[ant]) >= (dir_of_travel*min_preset[ant].Pos)) && 
               ((dir_of_travel*stepper_track[ant]) < (dir_of_travel*max_preset[ant].Pos)))
-          #elif ENDSTOP_OPT == 2               // End stop sensors implemented
+          #elif ENDSTOP_OPT == 2 || ENDSTOP_OPT == 4 // End stop sensors implemented
           // End_Stop switches can inhibit movement
           //
           // UP switch has been pushed and we're not at upper limit of range
@@ -581,11 +599,11 @@ void loop()
            else if ((dn_button_push() )
                    && ((dir_of_travel*stepper_track[ant]) > (dir_of_travel*min_preset[ant].Pos))
                    && ((dir_of_travel*stepper_track[ant]) <= (dir_of_travel*max_preset[ant].Pos)))
-          #elif ENDSTOP_OPT == 2               // End stop sensors implemented
+          #elif ENDSTOP_OPT == 2 || ENDSTOP_OPT == 4  // End stop sensors implemented
           // End_Stop switches can inhibit movement
           //
           // DOWN switch has been pushed and we're not at lower limit of range
-          else if (dn_button_push() && !flag.endstop_lower) 
+            else if (dn_button_push() && !flag.endstop_lower) 
           #elif ENDSTOP_OPT == 3               // Butterfly capacitor, no end stops required          
           // No movement inhibits whatsoever
           //
@@ -749,7 +767,7 @@ void loop()
       digitalWrite(bnd_bit2,LOW);
     }
 
-    #if DRV8825STEPPER  // ML.h selection: A Pololu (Allegro) A4988 or (TI) 8825 Stepper motor controller carrier board
+    #if STEPSTICKS  // ML.h selection: A Pololu (Allegro) A4988, (TI) 8825, or TMC2209 Stepper motor controller carrier board (aka Stepstick)
     //-------------------------------------------------------------------
     // Finalize stepper Move Pulse
     //
@@ -763,7 +781,7 @@ void loop()
     virt_LCD_to_real_LCD();
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/*    #if DRV8825STEPPER  // ML.h selection: A Pololu (Allegro) A4988 or (TI) 8825 Stepper motor controller carrier board
+/*    #if STEPSTICKS  // ML.h selection: A Pololu (Allegro) A4988, (TI) 8825, or TMC2209 Stepper motor controller carrier board (aka Stepstick)
     //-------------------------------------------------------------------
     // Finalize stepper Move Pulse
     //
@@ -776,7 +794,7 @@ void loop()
   // Here we do routines which are to be accessed once every 1 millisecond
   // Multipurpose Pushbutton
   //-------------------------------------------------------------------------------
-  if (pushMetro.check() )                    // check if the metro has passed its interval .
+  if (pushMetro.check())                    // check if the metro has passed its interval .
   {
     //-------------------------------------------------------------------
     // Multipurpose (Enact/Menu) Pushbutton state stuff
@@ -957,13 +975,16 @@ void loop()
         EEPROM_writeAnything(136,stepper_track); // Write current stepper tracl into EEPROM
                                             // stepper_track may be different from running.Pos
       }                                     // + delta_Pos, if frequency is outside of range 
-      if (frq_store_timer >= 10)            // Power down stepper if stable for 1 second
-      {                                
-        #if DRV8825STEPPER
-        drv8825_PwrOff();                   // Power down the stepper
-        #else
-        a4975_PwrOff();                     // Power down the stepper
-        #endif
+      if (!holdsteppers)
+      {
+        if (frq_store_timer >= 10)            // Power down stepper if stable for 1 second
+        {                                
+          #if STEPSTICKS
+          drv8825_PwrOff();                   // Power down the stepper
+          #else
+          a4975_PwrOff();                     // Power down the stepper
+          #endif
+        }
       }
     }
 
@@ -1099,7 +1120,7 @@ void setup()
 {
   uint8_t coldstart;
   
-  #if DRV8825STEPPER  // ML.h selection: A Pololu (Allegro) A4988 or (TI) DRV8825 Stepper motor controller carrier board
+  #if STEPSTICKS  // ML.h selection: A Pololu (Allegro) A4988, (TI) 8825, or TMC2209 Stepper motor controller carrier board (aka Stepstick)
   drv8825_Init();
   #else               // ML.h selection: A pair of A4975 Stepper Controllers
   a4975_Init();                            // Initialize Stepper Motor
@@ -1114,6 +1135,11 @@ void setup()
   pinMode(EndStopLower, INPUT_PULLUP);
   #endif
 
+  #if ENDSTOP_OPT == 2                     // End stop sensors implemented
+  pinMode(EndStopUpper, INPUT);
+  pinMode(EndStopLower, INPUT);
+  #endif
+
   pinMode(hardware_ptt, OUTPUT);           // Enable Hardware PTT
   digitalWrite(hardware_ptt, LOW);         // and set to LOW = Off
 
@@ -1122,7 +1148,9 @@ void setup()
   digitalWrite(bnd_bit1, LOW);             // and set to LOW = Off
   digitalWrite(bnd_bit2, LOW);             // and set to LOW = Off
    
+  #if !TMCUART
   pinMode(profile_bit1, OUTPUT);           // Enable Profile Indicator bits
+  #endif
   pinMode(profile_bit2, OUTPUT);
 
   pinMode(swralarm_bit, OUTPUT);           // Enable an SWR Alarm Output
@@ -1189,6 +1217,7 @@ void setup()
                                                  //  speedup of 4.
     controller_settings.step_speedup = 2;        // Deafault to 4x ( pow(2,2) )
     controller_settings.microsteps = 0;          // Default to 8 microsteps (0)
+    controller_settings.holdsteppers = HOLDSTEPPERS; // Default for whther to power off steppers when idle. See ML.h
     controller_settings.backlash_angle = BACKLASH_ANGLE; // Default angle, see ML.h
     controller_settings.swr_ok = ACCEPTABLE_SWR*10-10;   // 0 - 31, for a SWR of 1.0:1 to 4.1:1 
     controller_settings.swrautotune = false;     // Default SWR Autotune Mode Off
@@ -1199,7 +1228,7 @@ void setup()
     // This is only used if AD8307 installed - otherwise harmless
     controller_settings.cal_AD8307[0] = {
                   CAL1_NOR_VALUE,
-                  CALFWD1_RAW_DEFAULT,           // First Calibrate point, Forward direction, db*10 + 2 x AD values					 
+                  CALFWD1_RAW_DEFAULT,           // First Calibrate point, Forward direction, db*10 + 2 x AD values          
                   CALREV1_RAW_DEFAULT };         // First Calibrate point, Reverse direction, db*10 + 2 x AD values
     controller_settings.cal_AD8307[1] = {  
                   CAL2_NOR_VALUE,
@@ -1250,9 +1279,10 @@ void setup()
   pinMode(ant1_select, OUTPUT);                  // Enable Antenna Select bit
   digitalWrite(ant1_select, (ant==1)?HIGH:LOW);  // and set to selected antenna
   #endif
+  #if !TMCUART
   pinMode(ant2_select, OUTPUT);                  // Enable Antenna Select bit
   digitalWrite(ant2_select, (ant==2)?HIGH:LOW);  // and set to selected antenna
-
+  #endif
   // Set out bits to indicate which Radio Settings Profile is active
   if (controller_settings.radioprofile & 0x01) digitalWrite(profile_bit1, HIGH);
   else digitalWrite(profile_bit1, LOW);
@@ -1262,6 +1292,7 @@ void setup()
   step_rate = controller_settings.step_rate;
   step_speedup = controller_settings.step_speedup;
   microstep_resolution = controller_settings.microsteps;
+  holdsteppers = controller_settings.holdsteppers;
   
   tunedFrq = running[ant].Frq;                   // Initialize pseudo VFO, in case it is in use at start
   init_pseudo_vfo();
@@ -1341,7 +1372,7 @@ void setup()
   if      (i2c_status==1) lcd.print(F("AD7991-0 detected   "));
   else if (i2c_status==2) lcd.print(F("AD7991-1 detected   "));
   else                    lcd.print(F("Using built-in A/D  "));
-  delay(1000);	
+  delay(1000);  
   #endif
 
   lcd.setCursor(0,3);                            // Display whether SWR Autotune is on or off
@@ -1360,7 +1391,7 @@ void setup()
   // In case of DRV8825, A4988 the previous microstepping to either side 
   // needs to be pre-loaded, up to 4 to one side, up to 3 to the other side
   //------------------------------------------     
-  #if DRV8825STEPPER
+  #if STEPSTICKS
   int8_t microstep;
   microstep = stepper_track[ant]%8;
   //Serial.println(microstep);
@@ -1386,7 +1417,10 @@ void setup()
       }      
     }
     delay(100);
-    drv8825_PwrOff();
+    if (!holdsteppers)
+    {
+      drv8825_PwrOff();
+    }
   }
   #endif
   

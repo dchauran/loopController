@@ -806,7 +806,11 @@ void usb_parse_incoming(void)
     Serial.println();
 
     Serial.println(F("Stepper Settings-:"));  
+    #if STEPSTICKS == 2
+    int8_t rate_div = (6-microstep_resolution) - step_speedup;
+    #else
     int8_t rate_div = (3-microstep_resolution) - step_speedup;
+    #endif
     if (rate_div > 0) rate_div = pow(2,rate_div);
     else rate_div = 1;
     #if STEPPER_SPEED_IN_RPM            // Display Stepper Rate in RPM
@@ -817,7 +821,11 @@ void usb_parse_incoming(void)
     Serial.println(print_buf);  
     sprintf(print_buf,"SpeedUp       :%4ux",(uint8_t) pow(2,step_speedup));
     Serial.println(print_buf);  
+    #if STEPSTICKS == 2
+    sprintf(print_buf,"Microsteps    :%4u",(uint8_t) pow(2,6-microstep_resolution));
+    #else
     sprintf(print_buf,"Microsteps    :%4u",(uint8_t) pow(2,3-microstep_resolution));
+    #endif
     Serial.println(print_buf); 
     //if (stepper_backlash) Serial.println(F("Backlash Compensation Enabled"));  
     //else Serial.println(F("Backlash Compensation Disabled"));

@@ -1005,8 +1005,7 @@ void lcd_display_stepper_data(void)
     virt_lcd_setCursor(0,3);
     virt_lcd_print("CAP out of range");
   }    
-  #endif
-  #if ENDSTOP_OPT == 2                     // End stop sensors implemented
+  #elif ENDSTOP_OPT == 2                     // End stop sensors implemented
   // Display Lower EndStop condition
   //
   if (flag.endstop_lower)
@@ -1022,9 +1021,16 @@ void lcd_display_stepper_data(void)
     virt_lcd_setCursor(0,3);
     virt_lcd_print("Upper EndStop   ");
   }    
-  #endif
-  #if ENDSTOP_OPT == 3                     // Butterfly capacitor, no end stops required
+  #elif ENDSTOP_OPT == 3                     // Butterfly capacitor, no end stops required
   if (0);                                  // Nothing here
+  #elif ENDSTOP_OPT == 4                     // TMCUART
+  // Display Lower EndStop condition
+  //
+  if (flag.endstop_lower || flag.endstop_upper)
+  {
+    virt_lcd_setCursor(0,3);
+    virt_lcd_print("EndStopTriggered");
+  }
   #endif
 }
 
