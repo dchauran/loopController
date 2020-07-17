@@ -20,7 +20,7 @@
 //**
 //** Platform........: Teensy 3.1 & 3.2 (http://www.pjrc.com)
 //**                   (It may be possible to adapt this code to other
-//**                    Arduino compatible platforms, however this will 
+//**                    Arduino compatible platforms, however this will
 //**                    require extensive rewriting of some portions of
 //**                    the code)
 //**
@@ -68,12 +68,12 @@ const char *level0_menu_items[] =
                            "17-MeterAwakeSense",
                            "18-Debug Serial",
                            #else
-                           "17-Debug Serial",                           
+                           "17-Debug Serial",
                            #endif
                            #else
-                           "12-Debug Serial",                                
+                           "12-Debug Serial",
                            #endif
-                           "0-Exit" };                       
+                           "0-Exit" };
 // New Pos Flag
 #define NEW_POS_MENU      1
 
@@ -245,7 +245,7 @@ const char *meterthresh_menu_items[] =
              "3  100uW",
              "4    1mW",
              "5   10mW"  };
-#endif		
+#endif
 
 #define DEBUG_SERIAL_MENU     99
 
@@ -272,18 +272,18 @@ void lcd_scroll_Menu(char **menu, uint8_t menu_size,
   uint8_t a, x;
 
   // Clear LCD from begin_col to end of line.
-  virt_lcd_setCursor(begin_col, begin_row); 
+  virt_lcd_setCursor(begin_col, begin_row);
   for (a = begin_col; a < 20; a++)
     virt_lcd_print(" ");
   if (lines > 1)
   {
-    virt_lcd_setCursor(begin_col, begin_row+1); 
+    virt_lcd_setCursor(begin_col, begin_row+1);
     for (a = begin_col; a < 20; a++)
       virt_lcd_print(" ");
   }
   if (lines > 2)
   {
-    virt_lcd_setCursor(begin_col, begin_row+2); 
+    virt_lcd_setCursor(begin_col, begin_row+2);
     for (a = begin_col; a < 20; a++)
       virt_lcd_print(" ");
   }
@@ -295,11 +295,11 @@ void lcd_scroll_Menu(char **menu, uint8_t menu_size,
   else x = current_choice - 1;
   if (lines > 1)
   {
-    virt_lcd_setCursor(begin_col+2, begin_row); 
+    virt_lcd_setCursor(begin_col+2, begin_row);
     sprintf(print_buf,"%s", *(menu + x));
     virt_lcd_print(print_buf);
 
-    virt_lcd_setCursor(begin_col, begin_row+1); 
+    virt_lcd_setCursor(begin_col, begin_row+1);
     sprintf(print_buf,"->%s", *(menu + current_choice));
     virt_lcd_print(print_buf);
     if (current_choice == menu_size - 1) x = 0;
@@ -310,11 +310,11 @@ void lcd_scroll_Menu(char **menu, uint8_t menu_size,
       virt_lcd_setCursor(begin_col+2, begin_row+2);
       sprintf(print_buf,"%s", *(menu + x));
       virt_lcd_print(print_buf);
-    }  
+    }
   }
   else
   {
-    virt_lcd_setCursor(begin_col, begin_row); 
+    virt_lcd_setCursor(begin_col, begin_row);
     sprintf(print_buf,"->%s", *(menu + current_choice));
     virt_lcd_print(print_buf);
   }
@@ -326,10 +326,10 @@ void lcd_scroll_Menu(char **menu, uint8_t menu_size,
     if (current_choice == menu_size-1) x = 1;
     else if (current_choice == menu_size - 2 ) x = 0;
     else x = current_choice + 2;
-    virt_lcd_setCursor(begin_col, begin_row+3); 
+    virt_lcd_setCursor(begin_col, begin_row+3);
     for (a = begin_col; a < 20; a++)
       virt_lcd_print(" ");
-    virt_lcd_setCursor(begin_col+2, begin_row+3); 
+    virt_lcd_setCursor(begin_col+2, begin_row+3);
     sprintf(print_buf,"  %s", *(menu + x));
     virt_lcd_print(print_buf);
   }
@@ -353,9 +353,9 @@ void new_pos_menu(void)
   if (num_presets[ant] == MAX_PRESETS/2)  // Check if no more preset memories available
   #else                                   // Single or Dual antenna mode with automatic changeover
   if ((num_presets[0] + num_presets[1] + num_presets[2]) == MAX_PRESETS) // Check if no more preset memories available
-  #endif  
+  #endif
   {
-    virt_lcd_setCursor(0, 1); 
+    virt_lcd_setCursor(0, 1);
     virt_lcd_print("Memory Full!!!");
     Menu_exit_timer = 50;               // Show on LCD for 5 seconds
     menu_level = 0;                     // We're done with this menu level
@@ -366,13 +366,13 @@ void new_pos_menu(void)
     if (!radio.online)                  // No Frequency information being receiced from Radio
     {
       virt_lcd_clear();
-      virt_lcd_setCursor(0, 1); 
+      virt_lcd_setCursor(0, 1);
       virt_lcd_print("No FRQ information");
-      virt_lcd_setCursor(0, 2); 
+      virt_lcd_setCursor(0, 2);
       virt_lcd_print("received from Radio");
       Menu_exit_timer = 30;             // Show on LCD for 3 seconds
       menu_level = 0;                   // We're done with this menu level
-      flag.config_menu = false;         // We're done   
+      flag.config_menu = false;         // We're done
     }
     else
     {
@@ -391,7 +391,7 @@ void new_pos_menu(void)
       stepper_track[ant] = running[ant].Pos;
       delta_Pos[ant] = 0;
       preset[ num_presets[0] + num_presets[1] + num_presets[2] ].Pos = running[ant].Pos;
-      #endif  
+      #endif
       num_presets[ant]++;
 
       // Sort all presets in an ascending order, but with empty poitions on top
@@ -401,9 +401,9 @@ void new_pos_menu(void)
       normalize_stepper_pos();          // Normalize (first to 1000000) and store all position memories
       determine_preset_bounds();        // Recalculate outer bounds after normalization
       determine_active_range(running[ant].Frq); // Determine where we are
-     
+
       virt_lcd_clear();
-      virt_lcd_setCursor(0, 1); 
+      virt_lcd_setCursor(0, 1);
       virt_lcd_print("New Preset Stored!!!");
       Menu_exit_timer = 30;             // Show on LCD for 3 seconds
       menu_level = 0;                   // We're done with this menu level
@@ -418,17 +418,17 @@ void new_pos_menu(void)
 void manage_pos_menu(void)
 {
   static int8_t	current_selection;	// Keep track of current menu selection
-  
+
   #if ANT_CHG_2BANKS                // Dual antenna mode, dual memory banks
-  if (num_presets[ant] == 0) 
+  if (num_presets[ant] == 0)
   #else                             // Single Dual or Triple antenna mode with automatic changeover
-  if ((num_presets[0] + num_presets[1] + num_presets[2]) == 0) 
-  #endif  
+  if ((num_presets[0] + num_presets[1] + num_presets[2]) == 0)
+  #endif
   {
     flag.short_push = true;             // Nothing has been stored - nothing to do.
     flag.menu_lcd_upd = true;           // No LCD servicing required
   }
-  
+
   // Selection modified by encoder.  We remember last selection, even if exit and re-entry
   if (Enc.read()/ENC_MENURESDIVIDE != 0)
   {
@@ -450,49 +450,49 @@ void manage_pos_menu(void)
   if (!flag.menu_lcd_upd)               // Need to update LCD
   {
     flag.menu_lcd_upd = true;           // We have serviced LCD
-  
+
     // Keep Encoder Selection Within Bounds of the Menu Size
     #if ANT_CHG_2BANKS                  // Dual antenna mode, dual memory banks
     uint8_t menu_size = num_presets[ant] + 1;
     #else                               // Single, Dual or Triple antenna mode with automatic changeover
     uint8_t menu_size = num_presets[0] + num_presets[1]  + num_presets[2] + 1;
-    #endif  
+    #endif
     while(current_selection >= menu_size)
       current_selection -= menu_size;
     while(current_selection < 0)
       current_selection += menu_size;
 
     virt_lcd_clear();
-    
+
     // Print the Menu
     if (current_selection < (num_presets[0] + num_presets[1] + num_presets[2]))
     {
       virt_lcd_print("Overwrite FRQ Preset");
-      virt_lcd_setCursor(0,1); 
+      virt_lcd_setCursor(0,1);
       sprintf(print_buf,"->%2u ",current_selection);
       virt_lcd_print(print_buf);
-      
+
       #if ANT_CHG_2BANKS                // Dual antenna mode, dual memory banks
       display_frq(preset[ant*MAX_PRESETS/2+current_selection].Frq);
       #else                             // Single or Dual antenna mode with automatic changeover
       display_frq(preset[current_selection].Frq);
-      #endif  
+      #endif
 
       virt_lcd_print(" Hz");
-      
-      virt_lcd_setCursor(0,2); 
+
+      virt_lcd_setCursor(0,2);
       virt_lcd_print("with ");
       display_frq(running[ant].Frq);
       virt_lcd_print(" Hz");
-      virt_lcd_setCursor(0,3); 
+      virt_lcd_setCursor(0,3);
       virt_lcd_print("Rotate and select:");
-    }    
+    }
     else
     {
       virt_lcd_print("No change");
-      virt_lcd_setCursor(0,1); 
-      virt_lcd_print("-> Exit");  
-      virt_lcd_setCursor(0,3); 
+      virt_lcd_setCursor(0,1);
+      virt_lcd_print("-> Exit");
+      virt_lcd_setCursor(0,3);
       virt_lcd_print("Rotate and select:");
     }
   }
@@ -500,27 +500,27 @@ void manage_pos_menu(void)
   if (flag.short_push)
   {
     flag.short_push = false;            // Clear pushbutton status
- 
+
     // Nothing has been stored, lets get out of here
     #if ANT_CHG_2BANKS                  // Dual antenna mode, dual memory banks
     if (num_presets[ant] == 0)
     #else                               // Single, Dual or Triple antenna mode with automatic changeover
     if ((num_presets[0] + num_presets[1] + num_presets[2]) == 0)
-    #endif  
+    #endif
     {
       virt_lcd_clear();
-      virt_lcd_setCursor(0,1); 
+      virt_lcd_setCursor(0,1);
       virt_lcd_print("Memory is Empty!!");
       Menu_exit_timer = 30;             // Show on LCD for 3 seconds
       menu_level = 0;                   // We're done with this menu level
       flag.config_menu = false;         // We're done
-      flag.menu_lcd_upd = false;        // Make ready for next time     
+      flag.menu_lcd_upd = false;        // Make ready for next time
     }
     #if ANT_CHG_2BANKS                  // Dual antenna mode, dual memory banks
     else if (current_selection < num_presets[ant])
     #else                               // Single, Dual or Triple antenna mode with automatic changeover
     else if (current_selection < (num_presets[0] + num_presets[1] + num_presets[2]))
-    #endif  
+    #endif
     {
       #if ANT_CHG_2BANKS                // Dual antenna mode, dual memory banks
       // Store Current value in the selected preset
@@ -538,7 +538,7 @@ void manage_pos_menu(void)
       stepper_track[ant] = running[ant].Pos;
       delta_Pos[ant] = 0;
       preset[current_selection].Pos = running[ant].Pos;
-      #endif  
+      #endif
 
       // Sort all presets in an ascending order, but with empty poitions on top
       preset_sort();
@@ -547,9 +547,9 @@ void manage_pos_menu(void)
       normalize_stepper_pos();          // Normalize (first to 1000000) and store all position memories
       determine_preset_bounds();        // Recalculate outer bounds after normalization
       determine_active_range(running[ant].Frq); // Determine where we are
-     
+
       virt_lcd_clear();
-      virt_lcd_setCursor(0,3); 
+      virt_lcd_setCursor(0,3);
       virt_lcd_print("New value stored");
       Menu_exit_timer = 30;             // Show on LCD for 3 seconds
       menu_level = 0;                   // We're done with this menu level
@@ -559,7 +559,7 @@ void manage_pos_menu(void)
     else
     {
       virt_lcd_clear();
-      virt_lcd_setCursor(0,3); 
+      virt_lcd_setCursor(0,3);
       virt_lcd_print("Return from Menu");
       Menu_exit_timer = 20;             // Show on LCD for 2 seconds
       menu_level = 0;                   // We're done with this menu level
@@ -575,17 +575,17 @@ void manage_pos_menu(void)
 void delete_pos_menu(void)
 {
   static int8_t	 current_selection;	    // Keep track of current menu selection
-  
+
   #if ANT_CHG_2BANKS                    // Dual antenna mode, dual memory banks
   if (num_presets[ant] == 0)
   #else                                 // Single, Dual or Triple antenna mode with automatic changeover
   if ((num_presets[0] + num_presets[1] + num_presets[2]) == 0)
-  #endif  
+  #endif
   {
     flag.short_push = true;             // Nothing has been stored - nothing to do.
     flag.menu_lcd_upd = true;           // No LCD servicing required
   }
- 
+
   // We remember last selection as modified by encoder, even if exit and re-entry
   if (Enc.read()/ENC_MENURESDIVIDE != 0)
   {
@@ -613,41 +613,41 @@ void delete_pos_menu(void)
     uint8_t menu_size = num_presets[ant] + 1;
     #else                               // Single, Dual or Triple antenna mode with automatic changeover
     uint8_t menu_size = num_presets[0] + num_presets[1] + num_presets[2] + 1;
-    #endif  
+    #endif
     while(current_selection >= menu_size)
       current_selection -= menu_size;
     while(current_selection < 0)
       current_selection += menu_size;
 
     virt_lcd_clear();
-    
+
     // Print the Menu
     #if ANT_CHG_2BANKS                  // Dual antenna mode, dual memory banks
     if (current_selection < num_presets[ant])
     #else                               // Single, Dual or Triple antenna mode with automatic changeover
     if (current_selection < (num_presets[0] + num_presets[1] + num_presets[2]))
-    #endif  
+    #endif
     {
       virt_lcd_print("Delete FRQ Preset");
-      virt_lcd_setCursor(0,1); 
+      virt_lcd_setCursor(0,1);
       sprintf(print_buf,"->%2u ",current_selection);
       virt_lcd_print(print_buf);
       #if ANT_CHG_2BANKS                // Dual antenna mode, dual memory banks
       display_frq(preset[ant*MAX_PRESETS/2 + current_selection].Frq);
       #else                             // Single or Dual antenna mode with automatic changeover
       display_frq(preset[current_selection].Frq);
-      #endif  
+      #endif
       virt_lcd_print(" Hz");
-      
-      virt_lcd_setCursor(0,3); 
+
+      virt_lcd_setCursor(0,3);
       virt_lcd_print("Rotate and select:");
-    }    
+    }
     else
     {
       virt_lcd_print("No change");
-      virt_lcd_setCursor(0,1); 
-      virt_lcd_print("-> Exit");  
-      virt_lcd_setCursor(0,3); 
+      virt_lcd_setCursor(0,1);
+      virt_lcd_print("-> Exit");
+      virt_lcd_setCursor(0,3);
       virt_lcd_print("Rotate and select:");
     }
   }
@@ -661,21 +661,21 @@ void delete_pos_menu(void)
     if (num_presets[ant] == 0)
     #else                               // Single, Dual or Triple antenna mode with automatic changeover
     if ((num_presets[0] + num_presets[1] + num_presets[2]) == 0)
-    #endif  
+    #endif
     {
       virt_lcd_clear();
-      virt_lcd_setCursor(0,1); 
+      virt_lcd_setCursor(0,1);
       virt_lcd_print("Memory is Empty!!");
       Menu_exit_timer = 30;             // Show on LCD for 3 seconds
       menu_level = 0;                   // We're done with this menu level
       flag.config_menu = false;         // We're done
-      flag.menu_lcd_upd = false;        // Make ready for next time     
+      flag.menu_lcd_upd = false;        // Make ready for next time
     }
     #if ANT_CHG_2BANKS                  // Dual antenna mode, dual memory banks
     else if (current_selection < num_presets[ant])
     #else                               // Single, Dual or Triple antenna mode with automatic changeover
     else if (current_selection < (num_presets[0] + num_presets[1] + num_presets[2]))
-    #endif  
+    #endif
     {
       // Store a Zero value in the selected preset
       #if ANT_CHG_2BANKS                // Dual antenna mode, dual memory banks
@@ -684,7 +684,7 @@ void delete_pos_menu(void)
       #else                             // Single or Dual antenna mode with automatic changeover
       preset[current_selection].Frq = 0;
       preset[current_selection].Pos = 1000000;
-      #endif  
+      #endif
 
       // Sort all presets in an ascending order, but with empty poitions on top
       preset_sort();
@@ -693,9 +693,9 @@ void delete_pos_menu(void)
       normalize_stepper_pos();          // Normalize (first to 1000000) and store all position memories
       determine_preset_bounds();        // Recalculate outer bounds after normalization
       determine_active_range(running[ant].Frq); // Determine where we are
-     
+
       virt_lcd_clear();
-      virt_lcd_setCursor(0,3); 
+      virt_lcd_setCursor(0,3);
       virt_lcd_print("MemoryPreset Deleted");
       Menu_exit_timer = 30;             // Show on LCD for 3 seconds
       menu_level = 0;                   // We're done with this menu level
@@ -705,7 +705,7 @@ void delete_pos_menu(void)
     else
     {
       virt_lcd_clear();
-      virt_lcd_setCursor(0,3); 
+      virt_lcd_setCursor(0,3);
       virt_lcd_print("Return from Menu");
       Menu_exit_timer = 20;             // Show on LCD for 2 seconds
       menu_level = 0;                   // We're done with this menu level
@@ -721,9 +721,9 @@ void delete_pos_menu(void)
 void stepper_rate_submenu(void)
 {
   int8_t        current_selection;	// Keep track of current menu selection
-  
+
   current_selection = step_rate;
-  
+
   if (Enc.read()/ENC_MENURESDIVIDE != 0)
   {
     if (Enc.read()/ENC_MENURESDIVIDE > 0)
@@ -751,13 +751,13 @@ void stepper_rate_submenu(void)
       current_selection -= menu_size;
     while(current_selection < 1)        // Min value is 1 for (100 steps per second)
       current_selection += menu_size;
-      
+
     // Update with currently selected value
     step_rate = current_selection;
-    
+
     virt_lcd_clear();
     virt_lcd_print("Select Stepper Rate:");
-    
+
     // Print the Rotary Encoder scroll Menu
     virt_lcd_setCursor(0,2);
     // Normally the Stepper Rate is displayed in Steps per Second.
@@ -775,17 +775,17 @@ void stepper_rate_submenu(void)
     #else                               // Display Stepper Rate in Steps/Second
     sprintf(print_buf,"->%4u Steps/Second",step_rate*100/rate_div);
     #endif
-    virt_lcd_print(print_buf);  
+    virt_lcd_print(print_buf);
   }
-  
+
   // Enact selection
   if (flag.short_push)
   {
     virt_lcd_clear();
-    virt_lcd_setCursor(0,1); 
-    
+    virt_lcd_setCursor(0,1);
+
     flag.short_push = false;            // Clear pushbutton status
-    
+
     // Check if selected value is not same as the previous one stored in the
     // controller_settings.
     if (controller_settings.step_rate != step_rate)// New Value
@@ -795,7 +795,7 @@ void stepper_rate_submenu(void)
       EEPROM_writeAnything(1,controller_settings);
     }
     else virt_lcd_print("Nothing Changed");
-    
+
     Menu_exit_timer = 20;               // Show on LCD for 2 seconds
     menu_level = 0;                     // We're done with this menu level
     flag.config_menu = true;            // Go back to Config Menu
@@ -809,9 +809,9 @@ void stepper_rate_submenu(void)
 void stepper_speedup_submenu(void)
 {
   int8_t        current_selection;	// Keep track of current menu selection
-  
+
   current_selection = step_speedup;
-  
+
   if (Enc.read()/ENC_MENURESDIVIDE != 0)
   {
     if (Enc.read()/ENC_MENURESDIVIDE > 0)
@@ -842,24 +842,24 @@ void stepper_speedup_submenu(void)
 
     // Update with currently selected value
     step_speedup = current_selection;
-    
+
     virt_lcd_clear();
     virt_lcd_print("Select Stepper");
-    virt_lcd_setCursor(0,1); 
+    virt_lcd_setCursor(0,1);
     virt_lcd_print("Speed Up:");
-    
+
     // Print the Rotary Encoder scroll Menu
     lcd_scroll_Menu((char**)stepper_speedup_submenu_items, menu_size, current_selection, 2, 0,1);
   }
-  
+
   // Enact selection
   if (flag.short_push)
   {
     virt_lcd_clear();
-    virt_lcd_setCursor(0,1); 
-    
+    virt_lcd_setCursor(0,1);
+
     flag.short_push = false;            // Clear pushbutton status
-    
+
     // Check if selected value is not same as the previous one stored in the
     // controller_settings.
     if (controller_settings.step_speedup != current_selection)// New Value
@@ -869,7 +869,7 @@ void stepper_speedup_submenu(void)
       EEPROM_writeAnything(1,controller_settings);
     }
     else virt_lcd_print("Nothing Changed");
-    
+
     Menu_exit_timer = 20;               // Show on LCD for 2 seconds
     menu_level = 0;                     // We're done with this menu level
     flag.config_menu = true;            // Go back to Config Menu
@@ -884,9 +884,9 @@ void stepper_speedup_submenu(void)
 void stepper_microsteps_submenu(void)
 {
   int8_t        current_selection;	// Keep track of current menu selection
-  
+
   current_selection = microstep_resolution;
-  
+
   if (Enc.read()/ENC_MENURESDIVIDE != 0)
   {
     if (Enc.read()/ENC_MENURESDIVIDE > 0)
@@ -917,24 +917,24 @@ void stepper_microsteps_submenu(void)
 
     // Update with currently selected value
     microstep_resolution = current_selection;
-    
+
     virt_lcd_clear();
     virt_lcd_print("Select Stepper");
-    virt_lcd_setCursor(0,1); 
+    virt_lcd_setCursor(0,1);
     virt_lcd_print("Resolution:");
-    
+
     // Print the Rotary Encoder scroll Menu
     lcd_scroll_Menu((char**)stepper_microsteps_submenu_items, menu_size, current_selection, 2, 0,1);
   }
-  
+
   // Enact selection
   if (flag.short_push)
   {
     virt_lcd_clear();
-    virt_lcd_setCursor(0,1); 
-    
+    virt_lcd_setCursor(0,1);
+
     flag.short_push = false;            // Clear pushbutton status
-    
+
     // Check if selected threshold is not same as previous Microstep resolution, as stored in the
     // controller_settings. 0 for full resolution of 8 microsteps,
     // 1 for 4 microsteps, 2 for 2 microsteps or 3 for no microsteps
@@ -945,7 +945,7 @@ void stepper_microsteps_submenu(void)
       EEPROM_writeAnything(1,controller_settings);
     }
     else virt_lcd_print("Nothing Changed");
-    
+
     Menu_exit_timer = 20;               // Show on LCD for 2 seconds
     menu_level = 0;                     // We're done with this menu level
     //flag.config_menu = false;         // We're done
@@ -961,9 +961,9 @@ void stepper_microsteps_submenu(void)
 void stepper_hold_submenu(void)
 {
   int8_t        current_selection; // Keep track of current menu selection
-  
+
   current_selection = holdsteppers;
-  
+
   if (Enc.read()/ENC_MENURESDIVIDE != 0)
   {
     if (Enc.read()/ENC_MENURESDIVIDE > 0)
@@ -994,12 +994,12 @@ void stepper_hold_submenu(void)
 
     // Update with currently selected value
     holdsteppers = current_selection;
-    
+
     virt_lcd_clear();
     virt_lcd_print("Hold Steppers");
-    virt_lcd_setCursor(0,1); 
+    virt_lcd_setCursor(0,1);
     virt_lcd_print("When Idle:");
-    
+
     // Print the Rotary Encoder scroll Menu
     lcd_scroll_Menu((char**)stepper_microsteps_submenu_items, menu_size, current_selection, 2, 0,1);
   }
@@ -1008,7 +1008,7 @@ void stepper_hold_submenu(void)
   if (flag.short_push)
   {
     virt_lcd_clear();
-    virt_lcd_setCursor(0,1); 
+    virt_lcd_setCursor(0,1);
 
     flag.short_push = false;            // Clear pushbutton status
 
@@ -1037,7 +1037,7 @@ void stepper_hold_submenu(void)
 void stepper_settings_menu(void)
 {
   static int8_t   current_selection;	// Keep track of current menu selection
-  
+
   if (Enc.read()/ENC_MENURESDIVIDE != 0)
   {
     if (Enc.read()/ENC_MENURESDIVIDE > 0)
@@ -1065,7 +1065,7 @@ void stepper_settings_menu(void)
       current_selection -= menu_size;
     while(current_selection < 0)
       current_selection += menu_size;
-    
+
     virt_lcd_clear();
     virt_lcd_print("Stepper Settings");
     if (current_selection == 0)
@@ -1073,31 +1073,31 @@ void stepper_settings_menu(void)
       virt_lcd_setCursor(0,1); virt_lcd_print("->");
       virt_lcd_setCursor(0,2); virt_lcd_print("  ");
       virt_lcd_setCursor(0,3); virt_lcd_print("  ");
-      virt_lcd_setCursor(0,2); virt_lcd_print("  ");
+      virt_lcd_setCursor(0,4); virt_lcd_print("  ");
     }
     else if (current_selection == 1)
     {
       virt_lcd_setCursor(0,1); virt_lcd_print("  ");
       virt_lcd_setCursor(0,2); virt_lcd_print("->");
       virt_lcd_setCursor(0,3); virt_lcd_print("  ");
-      virt_lcd_setCursor(0,2); virt_lcd_print("  ");
+      virt_lcd_setCursor(0,4); virt_lcd_print("  ");
     }
     else if (current_selection == 2)
     {
       virt_lcd_setCursor(0,1); virt_lcd_print("  ");
       virt_lcd_setCursor(0,2); virt_lcd_print("  ");
       virt_lcd_setCursor(0,3); virt_lcd_print("->");
-      virt_lcd_setCursor(0,2); virt_lcd_print("  ");
+      virt_lcd_setCursor(0,4); virt_lcd_print("  ");
     }
     else if (current_selection == 3)
     {
       virt_lcd_setCursor(0,1); virt_lcd_print("  ");
       virt_lcd_setCursor(0,2); virt_lcd_print("  ");
-      virt_lcd_setCursor(0,2); virt_lcd_print("  "); 
-      virt_lcd_setCursor(0,3); virt_lcd_print("->");
+      virt_lcd_setCursor(0,3); virt_lcd_print("  ");
+      virt_lcd_setCursor(0,4); virt_lcd_print("->");
     }
     if (current_selection < 3)
-    {  
+    {
       virt_lcd_setCursor(2,1);
       // Normally the Stepper Rate is displayed in Steps per Second.
       // Alternately it can be shown in RPM - #define in ML.h
@@ -1115,9 +1115,9 @@ void stepper_settings_menu(void)
       sprintf(print_buf,"Max Rate:%4u st/s", step_rate*100/rate_div);
       #endif
       virt_lcd_print(print_buf);
-      virt_lcd_setCursor(2,2); 
+      virt_lcd_setCursor(2,2);
       uint8_t tmp_step_speedup =  pow(2,step_speedup);
-      sprintf(print_buf,"VariableRate: %ux", tmp_step_speedup); 
+      sprintf(print_buf,"VariableRate: %ux", tmp_step_speedup);
       virt_lcd_print(print_buf);
       virt_lcd_setCursor(2,3);
       #if STEPSTICKS == 2
@@ -1126,25 +1126,25 @@ void stepper_settings_menu(void)
       uint8_t tmp_microsteps =  8/pow(2,microstep_resolution);
       #endif
       if (tmp_microsteps == 1) tmp_microsteps = 0;
-      sprintf(print_buf,"Microsteps  : %u",tmp_microsteps); 
+      sprintf(print_buf,"Microsteps  : %u",tmp_microsteps);
       virt_lcd_print(print_buf);
     }
     else
     {
-      virt_lcd_setCursor(0,1); virt_lcd_print("  "); 
-      virt_lcd_setCursor(0,2); virt_lcd_print("-> Exit Stepper Menu"); 
-      virt_lcd_setCursor(0,3); virt_lcd_print("  ");      
+      virt_lcd_setCursor(0,1); virt_lcd_print("  ");
+      virt_lcd_setCursor(0,2); virt_lcd_print("-> Exit Stepper Menu");
+      virt_lcd_setCursor(0,3); virt_lcd_print("  ");
     }
   }
-  
+
   // Enact selection
   if (flag.short_push)
   {
     virt_lcd_clear();
-    virt_lcd_setCursor(0,1); 
-    
+    virt_lcd_setCursor(0,1);
+
     flag.short_push = false;            // Clear pushbutton status
-    flag.menu_lcd_upd = false;          // Force LCD reprint    
+    flag.menu_lcd_upd = false;          // Force LCD reprint
     switch (current_selection)
     {
       case 0:
@@ -1195,7 +1195,7 @@ void backlash_select_menu(void)
     Enc.write(0);
 
     controller_settings.backlash_angle = current_selection;
-    
+
     // Indicate that an LCD update is needed
     flag.menu_lcd_upd = false;            // Keep track of LCD update requirements
   }
@@ -1209,16 +1209,16 @@ void backlash_select_menu(void)
 
     virt_lcd_setCursor(0,0);
     virt_lcd_print("Stepper Backlash:");
-    
+
     virt_lcd_setCursor(0,1);
     virt_lcd_print("Turn and select->");
-    sprintf(print_buf,"%3u",current_selection*5);       
+    sprintf(print_buf,"%3u",current_selection*5);
     virt_lcd_print(print_buf);
-    
+
     virt_lcd_setCursor(0,3);
     virt_lcd_print("Range 0 to 400 steps");
   }
-    
+
   // Enact selection by saving in EEPROM
   if (flag.short_push)
   {
@@ -1249,7 +1249,7 @@ void backlash_select_menu(void)
 void transceiver_profile_menu(void)
 {
   static int8_t   current_selection;  // Keep track of current menu selection
-  
+
   if (Enc.read()/ENC_MENURESDIVIDE != 0)
   {
     if (Enc.read()/ENC_MENURESDIVIDE > 0)
@@ -1277,33 +1277,33 @@ void transceiver_profile_menu(void)
       current_selection -= menu_size;
     while(current_selection < 0)
       current_selection += menu_size;
-    
+
     virt_lcd_clear();
     if (current_selection == 4)         // Instructions & Exit w/o change
     {
-      virt_lcd_setCursor(0,0); virt_lcd_print("Select one of four"); 
-      virt_lcd_setCursor(0,1); virt_lcd_print("preset TRX Profiles."); 
-      virt_lcd_setCursor(0,3); virt_lcd_print("Or push to exit"); 
+      virt_lcd_setCursor(0,0); virt_lcd_print("Select one of four");
+      virt_lcd_setCursor(0,1); virt_lcd_print("preset TRX Profiles.");
+      virt_lcd_setCursor(0,3); virt_lcd_print("Or push to exit");
     }
     else
     {
       virt_lcd_setCursor(0,current_selection);
-      virt_lcd_print("->"); 
+      virt_lcd_print("->");
 
       for (uint8_t x = 0; x<4; x++)
       {
         virt_lcd_setCursor(2,x);
-        virt_lcd_print(transceiver_select_menu_items[controller_settings.trx[ x ].radio]);         
+        virt_lcd_print(transceiver_select_menu_items[controller_settings.trx[ x ].radio]);
       }
     }
   }
-  
+
   // Enact selection
   if (flag.short_push)
   {
     virt_lcd_clear();
-    virt_lcd_setCursor(0,1); 
-    
+    virt_lcd_setCursor(0,1);
+
     flag.short_push = false;            // Clear pushbutton status
     flag.menu_lcd_upd = false;          // Force LCD reprint
 
@@ -1318,7 +1318,7 @@ void transceiver_profile_menu(void)
       EEPROM_writeAnything(1,controller_settings); // and write the current settings to EEPROM
     }
     else virt_lcd_print("Nothing Changed");
-    
+
     Menu_exit_timer = 20;               // Show on LCD for 2 seconds
     menu_level = 0;                     // We're done with this menu level
     flag.config_menu = false;           // We're done
@@ -1336,9 +1336,9 @@ void transceiver_profile_menu(void)
 void transceiver_select_menu(void)
 {
   int8_t        current_selection;	// Keep track of current menu selection
-  
+
   current_selection = radio_selection;
-  
+
   if (Enc.read()/ENC_MENURESDIVIDE != 0)
   {
     if (Enc.read()/ENC_MENURESDIVIDE > 0)
@@ -1369,22 +1369,22 @@ void transceiver_select_menu(void)
 
     // Update with currently selected value
     radio_selection = current_selection;
-    
+
     virt_lcd_clear();
     virt_lcd_print("Transceiver Type:");
-    
+
     // Print the Rotary Encoder scroll Menu
     lcd_scroll_Menu((char**)transceiver_select_menu_items, menu_size, current_selection, 1, 0,3);
   }
-  
+
   // Enact selection
   if (flag.short_push)
   {
     virt_lcd_clear();
-    virt_lcd_setCursor(0,1); 
-    
+    virt_lcd_setCursor(0,1);
+
     flag.short_push = false;            // Clear pushbutton status
-    
+
     // Check if selected value is not same as the previous one stored in the
     // controller_settings.
     if (controller_settings.trx[controller_settings.radioprofile].radio != current_selection)// New Value
@@ -1393,12 +1393,12 @@ void transceiver_select_menu(void)
 
       controller_settings.trx[controller_settings.radioprofile].radio = current_selection;  // Update the controller_settings
       EEPROM_writeAnything(1,controller_settings);
-      
+
       trx_parameters_init(controller_settings.radioprofile);// Init serial port parameters for a new Radio
       trx_parameters_set(controller_settings.radioprofile); // and setup the serial port for TRX poll
     }
     else virt_lcd_print("Nothing Changed");
-    
+
     Menu_exit_timer = 20;               // Show on LCD for 2 seconds
     menu_level = 0;                     // We're done with this menu level
     //flag.config_menu = false;           // We're done
@@ -1421,9 +1421,9 @@ void icom_civ_address_menu(void)
     virt_lcd_setCursor(0,0);
     virt_lcd_print("Currently Selected");
     virt_lcd_setCursor(0,1);
-    virt_lcd_print("Radio is not an ICOM");    
+    virt_lcd_print("Radio is not an ICOM");
     virt_lcd_setCursor(0,3);
-    virt_lcd_print("->");    
+    virt_lcd_print("->");
     virt_lcd_print((char*)transceiver_select_menu_items[controller_settings.trx[controller_settings.radioprofile].radio]);
     flag.short_push = false;             // Clear pushbutton status
     Menu_exit_timer = 30;                // Show on LCD for 3 seconds
@@ -1435,7 +1435,7 @@ void icom_civ_address_menu(void)
   {
     // ICOM Address can be any value between 0x01 and 0xef
     current_selection = controller_settings.trx[controller_settings.radioprofile].ICOM_address;
-  
+
     // Selection modified by encoder.  We remember last selection, even if exit and re-entry
     if (Enc.read()/ENC_MENURESDIVIDE != 0)
     {
@@ -1449,37 +1449,37 @@ void icom_civ_address_menu(void)
       }
       // Reset data from Encoder
       Enc.write(0);
-  
+
       controller_settings.trx[controller_settings.radioprofile].ICOM_address = current_selection;
-      
+
       // Indicate that an LCD update is needed
       flag.menu_lcd_upd = false;            // Keep track of LCD update requirements
     }
-  
+
     // If LCD update is needed
     if (!flag.menu_lcd_upd)
     {
       flag.menu_lcd_upd = true;            // We have serviced LCD
-  
+
       virt_lcd_clear();
-  
+
       virt_lcd_setCursor(0,0);
       virt_lcd_print("ICOM CI-V Address:");
-      
+
       virt_lcd_setCursor(0,1);
       virt_lcd_print("Turn and select->");
       sprintf(print_buf,"%02X$",current_selection);
       virt_lcd_print(print_buf);
-   					
+
       virt_lcd_setCursor(0,3);
       virt_lcd_print("Range is 01$ to EF$");
     }
-    	
+
     // Enact selection by saving in EEPROM
     if (flag.short_push)
     {
       flag.short_push = false;             // Clear pushbutton status
-  
+
       virt_lcd_clear();
       virt_lcd_setCursor(1,1);
       EEPROM_readAnything(1,controller_settings);
@@ -1490,7 +1490,7 @@ void icom_civ_address_menu(void)
         virt_lcd_print("Value Stored");
       }
       else virt_lcd_print("Nothing Changed");
-    
+
       Menu_exit_timer = 30;                // Show on LCD for 3 seconds
       flag.config_menu = true;             // Go back to Config Menu
       menu_level = 0;                      // We are done with this menu level
@@ -1506,9 +1506,9 @@ void icom_civ_address_menu(void)
 void rs232_sig_menu(void)
 {
   int8_t        current_selection;	// Keep track of current menu selection
-  
+
   current_selection = rs232_signals;
-  
+
   if (Enc.read()/ENC_MENURESDIVIDE != 0)
   {
     if (Enc.read()/ENC_MENURESDIVIDE > 0)
@@ -1539,31 +1539,31 @@ void rs232_sig_menu(void)
 
     // Update with currently selected value
     rs232_signals = current_selection;
-    
+
     virt_lcd_clear();
     virt_lcd_print("Serial Port Signals:");
-    
+
     // Print the Rotary Encoder scroll Menu
     lcd_scroll_Menu((char**)rs232_sig_menu_items, menu_size, current_selection, 1, 0,3);
   }
-  
+
   // Enact selection
   if (flag.short_push)
   {
     virt_lcd_clear();
-    virt_lcd_setCursor(0,1); 
-    
+    virt_lcd_setCursor(0,1);
+
     flag.short_push = false;            // Clear pushbutton status
-    
+
     // Check if selected RS232 signals polaritythreshold is not same as previously selected
     // 0 for TTL Signals Mode, 1 for RS232 Signals Mode
-    if ((controller_settings.trx[controller_settings.radioprofile].sig_mode 
+    if ((controller_settings.trx[controller_settings.radioprofile].sig_mode
          + (controller_settings.trx[controller_settings.radioprofile].passthrough*2))
          != current_selection)// New Value
     {
       virt_lcd_print("SerialSettingsStored");
- 
-      // Update the controller_settings      
+
+      // Update the controller_settings
       controller_settings.trx[controller_settings.radioprofile].sig_mode = current_selection & 0x01;
       controller_settings.trx[controller_settings.radioprofile].passthrough = (current_selection/2) & 0x01;
 
@@ -1571,7 +1571,7 @@ void rs232_sig_menu(void)
       trx_parameters_set(controller_settings.radioprofile);             // Enact the serial port setup change
     }
     else virt_lcd_print("Nothing Changed");
-    
+
     Menu_exit_timer = 20;               // Show on LCD for 2 seconds
     menu_level = 0;                     // We're done with this menu level
     //flag.config_menu = false;         // We're done
@@ -1586,9 +1586,9 @@ void rs232_sig_menu(void)
 void rs232_rate_menu(void)
 {
   int8_t  current_selection;            // Keep track of current menu selection
-  
+
   current_selection = rs232_rate;
-  
+
   if (Enc.read()/ENC_MENURESDIVIDE != 0)
   {
     if (Enc.read()/ENC_MENURESDIVIDE > 0)
@@ -1619,22 +1619,22 @@ void rs232_rate_menu(void)
 
     // Update with currently selected value
     rs232_rate = current_selection;
-    
+
     virt_lcd_clear();
     virt_lcd_print("Serial Data Rate:");
-    
+
     // Print the Rotary Encoder scroll Menu
     lcd_scroll_Menu((char**)rs232_rate_menu_items, menu_size, current_selection, 2, 0,1);
   }
-  
+
   // Enact selection
   if (flag.short_push)
   {
     virt_lcd_clear();
-    virt_lcd_setCursor(0,1); 
-    
+    virt_lcd_setCursor(0,1);
+
     flag.short_push = false;            // Clear pushbutton status
-    
+
     // Check if selected data rate is not same as the one stored in the Controller Settings
     // 0 = 1200 b/s, 1 = 2400 b/s, 2 = 4800 b/s, 3 = 9600 b/s,
     // 4 = 19200 b/s, 5 = 38400 b/s -- in other words:
@@ -1649,7 +1649,7 @@ void rs232_rate_menu(void)
       trx_parameters_set(controller_settings.radioprofile); // Enact the serial port setup change
     }
     else virt_lcd_print("Nothing Changed");
-    
+
     Menu_exit_timer = 20;               // Show on LCD for 2 seconds
     menu_level = 0;                     // We're done with this menu level
     //flag.config_menu = false;           // We're done
@@ -1672,9 +1672,9 @@ void tx_tunepwr_menu(void)
     virt_lcd_setCursor(0,0);
     virt_lcd_print("Not supported by");
     virt_lcd_setCursor(0,1);
-    virt_lcd_print("the selected Radio");    
+    virt_lcd_print("the selected Radio");
     virt_lcd_setCursor(0,3);
-    virt_lcd_print("->");    
+    virt_lcd_print("->");
     virt_lcd_print((char*)transceiver_select_menu_items[controller_settings.trx[controller_settings.radioprofile].radio]);
     flag.short_push = false;             // Clear pushbutton status
     Menu_exit_timer = 30;                // Show on LCD for 3 seconds
@@ -1686,7 +1686,7 @@ void tx_tunepwr_menu(void)
   {
     // Power Level can be any value between 0 and 254
     current_selection = tx_tune_pwr;
-  
+
     // Selection modified by encoder.  We remember last selection, even if exit and re-entry
     if (Enc.read()/ENC_MENURESDIVIDE != 0)
     {
@@ -1700,37 +1700,37 @@ void tx_tunepwr_menu(void)
       }
       // Reset data from Encoder
       Enc.write(0);
-  
+
       tx_tune_pwr = current_selection;
-      
+
       // Indicate that an LCD update is needed
       flag.menu_lcd_upd = false;            // Keep track of LCD update requirements
     }
-  
+
     // If LCD update is needed
     if (!flag.menu_lcd_upd)
     {
       flag.menu_lcd_upd = true;            // We have serviced LCD
-  
+
       virt_lcd_clear();
-  
+
       virt_lcd_setCursor(0,0);
       virt_lcd_print("TX Tune Power Level:");
-      
+
       virt_lcd_setCursor(0,1);
       virt_lcd_print("Turn and select->");
       sprintf(print_buf,"%03u$",current_selection);
       virt_lcd_print(print_buf);
-             
+
       virt_lcd_setCursor(0,3);
       virt_lcd_print("Range is 0 to 254");
     }
-      
+
     // Enact selection by saving in EEPROM
     if (flag.short_push)
     {
       flag.short_push = false;             // Clear pushbutton status
-  
+
       virt_lcd_clear();
       virt_lcd_setCursor(1,1);
       EEPROM_readAnything(1,controller_settings);
@@ -1741,7 +1741,7 @@ void tx_tunepwr_menu(void)
         virt_lcd_print("Value Stored");
       }
       else virt_lcd_print("Nothing Changed");
-    
+
       Menu_exit_timer = 30;                // Show on LCD for 3 seconds
       flag.config_menu = true;             // Go back to Config Menu
       menu_level = 0;                      // We are done with this menu level
@@ -1804,7 +1804,7 @@ void clear_memories_menu(void)
     {
       case 0:
         virt_lcd_clear();
-        virt_lcd_setCursor(1,1); 				
+        virt_lcd_setCursor(1,1);
         virt_lcd_print("Nothing Changed");
         Menu_exit_timer = 30;           // Show on LCD for 3 seconds
         //flag.config_menu = true;      // We're NOT done, just backing off to Config Menu
@@ -1816,13 +1816,13 @@ void clear_memories_menu(void)
         // Force an EEPROM update upon reboot by storing 0xfe in the first address
         EEPROM.write(0,0xfe);
         virt_lcd_clear();
-        virt_lcd_setCursor(1,1);				
+        virt_lcd_setCursor(1,1);
         virt_lcd_print("Clear all Memories");
         SOFT_RESET();
         //while (1);                   // Bye bye, Death by Watchdog
       default:
         virt_lcd_clear();
-        virt_lcd_setCursor(1,1);				
+        virt_lcd_setCursor(1,1);
         virt_lcd_print("Nothing Changed");
         Menu_exit_timer = 30;          // Show on LCD for 3 seconds
         flag.config_menu = false;      // We're done
@@ -1860,7 +1860,7 @@ void swr_threshold_menu(void)
     Enc.write(0);
 
     controller_settings.swr_ok = current_selection - 10;
-    
+
     // Indicate that an LCD update is needed
     flag.menu_lcd_upd = false;            // Keep track of LCD update requirements
   }
@@ -1879,11 +1879,11 @@ void swr_threshold_menu(void)
 
     sprintf(print_buf,"%1u.%01u",current_selection/10, current_selection%10);
     virt_lcd_print(print_buf);
- 					
+
     virt_lcd_setCursor(0,2);
     virt_lcd_print("Range is 1.0 to 4.1");
   }
-  	
+
   // Enact selection by saving in EEPROM
   if (flag.short_push)
   {
@@ -1955,7 +1955,7 @@ void scalerange_menu_level2(void)
     {
       // Set bounds for Range 1 adjustments
       if(current_selection > 99) current_selection = 99; // Range 1 can take any value between 1 and 99
-      if(current_selection < 1) current_selection = 1;			
+      if(current_selection < 1) current_selection = 1;
     }
     if (scale_set>0)
     {
@@ -1977,21 +1977,21 @@ void scalerange_menu_level2(void)
     // If Range 1 is being adjusted, Ranges 2 and 3 can be pushed up or down as a consequence
     // If Range 2 is being adjusted up, Range 3 can be pushed up
     // If Range 3 is being adjusted down, Range 2 can be pushed down
-    if (controller_settings.Scale[1] >= controller_settings.Scale[0]*10) 
+    if (controller_settings.Scale[1] >= controller_settings.Scale[0]*10)
       controller_settings.Scale[1] = controller_settings.Scale[0]*10 - 1;
-    if (controller_settings.Scale[2] >= controller_settings.Scale[0]*10) 
+    if (controller_settings.Scale[2] >= controller_settings.Scale[0]*10)
       controller_settings.Scale[2] = controller_settings.Scale[0]*10 - 1;
-    // Ranges 2 and 3 cannot be smaller than Range 1			
-    if (controller_settings.Scale[1] < controller_settings.Scale[0]) 
+    // Ranges 2 and 3 cannot be smaller than Range 1
+    if (controller_settings.Scale[1] < controller_settings.Scale[0])
       controller_settings.Scale[1] = controller_settings.Scale[0];
-    if (controller_settings.Scale[2] < controller_settings.Scale[0]) 
+    if (controller_settings.Scale[2] < controller_settings.Scale[0])
       controller_settings.Scale[2] = controller_settings.Scale[0];
 
     // Adjustment up of Range 2 can push Range 3 up
-    if ((scale_set == 1) && (controller_settings.Scale[1] > controller_settings.Scale[2])) 
+    if ((scale_set == 1) && (controller_settings.Scale[1] > controller_settings.Scale[2]))
       controller_settings.Scale[2] = controller_settings.Scale[1];
     // Adjustment down of Range 3 can push Range 2 down:
-    if ((scale_set == 2) && (controller_settings.Scale[2] < controller_settings.Scale[1])) 
+    if ((scale_set == 2) && (controller_settings.Scale[2] < controller_settings.Scale[1]))
       controller_settings.Scale[1] = controller_settings.Scale[2];
 
     virt_lcd_clear();
@@ -2150,7 +2150,7 @@ void calibrate_menu_level2(void)
   // Below variable can take one of the three above defined values, based on the
   // detected input "calibration" signal
   static uint8_t cal_sig_direction_quality;
-  
+
   // Get Current value
   current_selection = controller_settings.cal_AD8307[cal_set].db10m;
 
@@ -2195,7 +2195,7 @@ void calibrate_menu_level2(void)
   }
 
   // If LCD update is needed
-  if(!flag.menu_lcd_upd)  
+  if(!flag.menu_lcd_upd)
   {
     flag.menu_lcd_upd = true;                            // We have serviced LCD
 
@@ -2209,7 +2209,7 @@ void calibrate_menu_level2(void)
     controller_settings.cal_AD8307[cal_set].db10m = current_selection;
 
     virt_lcd_clear();
-    virt_lcd_setCursor(0,0);	
+    virt_lcd_setCursor(0,0);
 
     if (menu_level == CAL_SET0_MENU)                     // equals cal_set == 0
     {
@@ -2275,10 +2275,10 @@ void calibrate_menu_level2(void)
     uint16_t thirty_dB;                                  // Used for single shot calibration
     #if WIRE_ENABLED
     if (ad7991_addr) thirty_dB = 1165;                   // If AD7991 was detected during init
-    else 
+    else
     #endif
     thirty_dB = 931;
-        
+
     // Save modified value
     // If forward direction, then we calibrate for both, using the measured value for
     // in the forward direction only
@@ -2395,7 +2395,7 @@ void calibrate_menu(void)
 
     // Indicate Current value stored under the currently selected GainPreset
     // The "stored" value indication changes according to which GainPreset is currently selected.
-    virt_lcd_setCursor(0,0);				
+    virt_lcd_setCursor(0,0);
     virt_lcd_print("Calibrate");
     if (current_selection <= 2)
     {
@@ -2457,7 +2457,7 @@ void calibrate_menu(void)
         break;
       case 3:
         virt_lcd_clear();
-        virt_lcd_setCursor(1,1);				
+        virt_lcd_setCursor(1,1);
         virt_lcd_print("Done w. Cal");
         Menu_exit_timer = 30;                            // Show on LCD for 3 seconds
         flag.config_menu = true;                         // We're NOT done, just backing off
@@ -2466,7 +2466,7 @@ void calibrate_menu(void)
         break;
       default:
         virt_lcd_clear();
-        virt_lcd_setCursor(1,1);				
+        virt_lcd_setCursor(1,1);
         virt_lcd_print("Done w. Cal");
         Menu_exit_timer = 30;                            // Show on LCD for 3 seconds
         flag.config_menu = false;                        // We're done
@@ -2486,7 +2486,7 @@ void calibrate_menu(void)
 
   // We want LCD update every time - to show Power measurement
   flag.menu_lcd_upd = false;
- 
+
   // Calibration multiplier for diode detector type Power/SWR meter, 100 = 1.0
   current_selection = controller_settings.meter_cal;
 
@@ -2504,7 +2504,7 @@ void calibrate_menu(void)
     // Reset data from Encoder
     Enc.write(0);
 
-    controller_settings.meter_cal = current_selection;   
+    controller_settings.meter_cal = current_selection;
   }
 
   virt_lcd_clear();
@@ -2516,16 +2516,16 @@ void calibrate_menu(void)
 
   sprintf(print_buf,"%1u.%02u",current_selection/100, current_selection%100);
   virt_lcd_print(print_buf);
- 					
+
   virt_lcd_setCursor(0,2);
   virt_lcd_print("Range is 0.10 - 2.50");
-  
+
   //measure_power_and_swr();
   virt_lcd_setCursor(0,3);
   virt_lcd_print("MeasuredPower:");
   print_p_mw(power_mw);
   virt_lcd_print(print_buf);
-  	
+
   // Enact selection by saving in EEPROM
   if (flag.short_push)
   {
@@ -2541,7 +2541,7 @@ void calibrate_menu(void)
       virt_lcd_print("Value Stored");
     }
     else virt_lcd_print("Nothing Changed");
-    
+
     Menu_exit_timer = 30;                // Show on LCD for 3 seconds
     flag.config_menu = false;            // We're done
     menu_level = 0;                      // We are done with this menu level
@@ -2621,7 +2621,7 @@ void pep_menu(void)
     flag.short_push = false;                    // Clear pushbutton status
 
     // Check if selected threshold is not same as previous
-    temp = controller_settings.PEP_period;			
+    temp = controller_settings.PEP_period;
     EEPROM_readAnything(1,controller_settings);
     if (controller_settings.PEP_period != temp)
     {
@@ -2647,7 +2647,7 @@ void meterawake_menu(void)
 {
   static int8_t	current_selection;
   uint8_t temp;
-	
+
   // Get Current value
   // 1uW=0.001=>1, 10uW=0.01=>2... 100uW=>3, 1mW=>4, 10mW=>5
   current_selection = controller_settings.idle_thresh - 1;
@@ -2685,7 +2685,7 @@ void meterawake_menu(void)
     // Update with currently selected value
     // 0=0, 1uW=0.001=>1, 10uW=0.01=>2... 100uW=>3, 1mW=>4, 10mW=>5
     controller_settings.idle_thresh = current_selection + 1;
- 	
+
     virt_lcd_clear();
     virt_lcd_setCursor(0,0);
     virt_lcd_print("MeterAwake Threshld:");
@@ -2710,7 +2710,7 @@ void meterawake_menu(void)
     flag.short_push = false;                    // Clear pushbutton status
 
     // Check if selected threshold is not same as previous
-    temp = controller_settings.idle_thresh;			
+    temp = controller_settings.idle_thresh;
     EEPROM_readAnything(1,controller_settings);
     if (controller_settings.idle_thresh != temp)
     {
@@ -2734,7 +2734,7 @@ void meterawake_menu(void)
 //--------------------------------------------------------------------
 void debug_serial_menu(void)
 {
-  static bool debug_screen = false;    // 
+  static bool debug_screen = false;    //
   if (!debug_screen)                   // Announce Menu Mode when entering
   {
     radio.debug_to_lcd = true;         // Activate LCD Serial Debug mode
@@ -2748,7 +2748,7 @@ void debug_serial_menu(void)
 
   // Make sure other functions do not trigger virt_lcd_clear()
   //Menu_exit_timer = 255;
-  
+
   // Exit on Button Push
   if (flag.short_push)
   {
@@ -2756,7 +2756,7 @@ void debug_serial_menu(void)
     flag.short_push = false;            // Clear pushbutton status
 
     virt_lcd_clear();
-    virt_lcd_setCursor(0,1);				
+    virt_lcd_setCursor(0,1);
     virt_lcd_print("Nothing Changed");
     Menu_exit_timer = 20;               // Show on LCD for 2 seconds
     flag.config_menu = true;            // We're not done, just backing off
@@ -2785,7 +2785,7 @@ void menu_level0(void)
     }
     else if (Enc.read()/ENC_MENURESDIVIDE < 0)
     {
-      current_selection--;   
+      current_selection--;
     }
     // Reset data from Encoder
     Enc.write(0);
@@ -2866,7 +2866,7 @@ void menu_level0(void)
       case 11: // TX Tune Power adjust Menu
         menu_level = TX_TUNEPWR_MENU;
         break;
-      
+
       case 12: // SWR Threshold adjust Menu
         menu_level = SWR_THRESH_MENU;
         break;
@@ -2891,7 +2891,7 @@ void menu_level0(void)
       case 17:// Debug Serial
         menu_level = DEBUG_SERIAL_MENU;
         break;
-        
+
       #else
       case 16:// Debug Serial
         menu_level = DEBUG_SERIAL_MENU;
@@ -2902,7 +2902,7 @@ void menu_level0(void)
         menu_level = DEBUG_SERIAL_MENU;
         break;
       #endif
-      
+
       default:
         // Exit
         virt_lcd_clear();
@@ -2937,7 +2937,7 @@ void ConfigMenu(void)
   else if (menu_level == ICOM_CIV_MENU)              icom_civ_address_menu();
   else if (menu_level == RS232_SIG_MENU)             rs232_sig_menu();
   else if (menu_level == RS232_RATE_MENU)            rs232_rate_menu();
-  
+
   #if PSWR_AUTOTUNE
   else if (menu_level == TX_TUNEPWR_MENU)            tx_tunepwr_menu();
   else if (menu_level == SWR_THRESH_MENU)            swr_threshold_menu();
